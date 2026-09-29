@@ -83,8 +83,7 @@ def mit_torque(kp, kd, q_des, dq_des, q, dq, tau_ff, tau_limit):
     """
     # >>> solution
     kp, kd, q_des, dq_des, q, dq, tau_ff, tau_limit = (
-        np.asarray(v, dtype=np.float64)
-        for v in (kp, kd, q_des, dq_des, q, dq, tau_ff, tau_limit)
+        np.asarray(v, dtype=np.float64) for v in (kp, kd, q_des, dq_des, q, dq, tau_ff, tau_limit)
     )
     tau = kp * (q_des - q) + kd * (dq_des - dq) + tau_ff
     return np.clip(tau, -tau_limit, tau_limit)

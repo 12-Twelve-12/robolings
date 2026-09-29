@@ -47,6 +47,7 @@ def forward_kinematics(origins, axes, q):
     Returns a ``(n, 4, 4)`` array where entry ``i`` is the frame of link
     ``i`` expressed in the world frame.
     """
+
     # >>> solution
     def _rot(axis, angle):
         k = axis / np.linalg.norm(axis)

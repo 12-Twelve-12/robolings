@@ -22,6 +22,7 @@ def cosine_schedule(num_steps, s=0.008, max_beta=0.999):
 
     Returns ``(betas, alphas_cumprod)``, each ``(num_steps,)``.
     """
+
     raise NotImplementedError("TODO: write this function")
 
 
