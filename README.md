@@ -40,7 +40,11 @@ Answers are in `solutions/` if you get stuck.
 
 ### Progress on GitHub
 
-Each push to your fork runs the tests and puts a progress table in the summary of the workflow run. Forks have Actions disabled by default, so enable them once in the Actions tab.
+![progress](../../raw/progress/progress.svg)
+
+Each push to your fork runs the tests, puts a progress table in the summary of the workflow run, and updates this badge. The badge belongs to the repository you are looking at. Here it says 0, in your fork it shows your own count.
+
+Forks have Actions disabled by default, so enable them once in the Actions tab. The badge appears after the first run.
 
 ### Getting new exercises
 

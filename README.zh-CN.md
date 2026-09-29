@@ -43,7 +43,11 @@ Next: forward_kinematics
 
 ### 在 GitHub 上看进度
 
-每次往你的 fork 推送，都会自动跑一遍测试，并在该次运行的摘要页生成进度表。fork 出来的仓库默认关闭 Actions，需要先到 Actions 页签手动开启一次。
+![progress](../../raw/progress/progress.svg)
+
+每次往你的 fork 推送，都会自动跑一遍测试，在该次运行的摘要页生成进度表，并更新上面这个徽章。徽章显示的是你正在看的这个仓库的进度：这里是 0，在你自己的 fork 里就是你的题数。
+
+fork 出来的仓库默认关闭 Actions，需要先到 Actions 页签手动开启一次。第一次运行之后徽章才会出现。
 
 ### 获取新题
 

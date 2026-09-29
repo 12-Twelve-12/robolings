@@ -2,13 +2,17 @@ name: Progress
 
 # Runs in every fork. It reports how many exercises pass and never fails,
 # so an unfinished exercise does not show up as a red cross.
+#
+# On the default branch it also draws a badge and commits it to a branch
+# called "progress". The README shows that badge.
 
 on:
   push:
+    branches-ignore: [progress]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   progress:
@@ -22,4 +26,23 @@ jobs:
       - name: Grade the exercises
         run: |
           python robolings.py --markdown >> "$GITHUB_STEP_SUMMARY"
-          python robolings.py
+          python robolings.py --badge "$RUNNER_TEMP/progress.svg"
+      - name: Publish the badge
+        if: github.ref_name == github.event.repository.default_branch || github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch -q origin progress; then
+            git checkout -q -B progress FETCH_HEAD
+          else
+            git checkout -q --orphan progress
+            git rm -rfq .
+          fi
+          cp "$RUNNER_TEMP/progress.svg" progress.svg
+          git add progress.svg
+          if git diff --cached --quiet; then
+            echo "badge unchanged"
+          else
+            git commit -q -m "progress badge"
+            git push -q origin progress
+          fi
