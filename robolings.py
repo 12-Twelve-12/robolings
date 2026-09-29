@@ -1,11 +1,14 @@
 """robolings - small exercises for robot learning.
 
     python robolings.py               show progress and the next exercise
+    python robolings.py watch         rerun an exercise every time you save it
     python robolings.py run slerp     run the tests of one exercise
     python robolings.py run 5         same, by position in the list
     python robolings.py show slerp    print the problem statement
+    python robolings.py hint slerp    print a hint
+    python robolings.py reset slerp   throw away your answer and start over
     python robolings.py list          list every exercise
-    python robolings.py --zh          Chinese titles and statements
+    python robolings.py --zh          Chinese titles, statements and hints
     python robolings.py --markdown    progress as Markdown, for CI summaries
     python robolings.py --badge FILE  also write a progress badge
 
@@ -24,13 +27,19 @@ import io
 import json
 import os
 import pathlib
+import subprocess
 import sys
+import time
 
 ROOT = pathlib.Path(__file__).resolve().parent
 
 
 def load_registry():
     return json.loads((ROOT / "exercises.json").read_text(encoding="utf-8"))
+
+
+def load_hints():
+    return json.loads((ROOT / "hints.json").read_text(encoding="utf-8"))
 
 
 class Collector:
@@ -120,29 +129,31 @@ def chinese_statement(entry):
     return "\n".join(line for line in lines if not line.startswith("<!--")).strip("\n")
 
 
-def print_progress(registry, status, target, zh):
+def print_progress(registry, status, target, zh, brief=False):
     done = sum(1 for s in status.values() if s == "done")
     total = len(registry)
     width = 30
     filled = round(width * done / total)
     print(f"robolings  [{'#' * filled}{'.' * (width - filled)}]  {done}/{total}")
-    track = None
-    for number, entry in enumerate(registry, start=1):
-        if entry["track"] != track:
-            track = entry["track"]
-            print(f"\n  {track}")
-        mark = {"done": "x", "todo": " ", "untested": "?"}[status[entry["name"]]]
-        print(f"   [{mark}] {number:2d}  {entry['name']:<22} {title_of(entry, zh)}")
+    if not brief:
+        track = None
+        for number, entry in enumerate(registry, start=1):
+            if entry["track"] != track:
+                track = entry["track"]
+                print(f"\n  {track}")
+            mark = {"done": "x", "todo": " ", "untested": "?"}[status[entry["name"]]]
+            print(f"   [{mark}] {number:2d}  {entry['name']:<22} {title_of(entry, zh)}")
     print()
     nxt = next((e for e in registry if status[e["name"]] != "done"), None)
     if nxt is None:
         print("All exercises pass. Well done.")
         return
+    suffix = " --zh" if zh else ""
     print(f"Next: {nxt['name']}")
     print(f"  edit   {file_of(nxt, target)}")
     print(f"  check  python robolings.py run {nxt['name']}")
-    if zh and zh_file(nxt).exists():
-        print(f"  read   python robolings.py show {nxt['name']} --zh")
+    print(f"  read   python robolings.py show {nxt['name']}{suffix}")
+    print(f"  stuck  python robolings.py hint {nxt['name']}{suffix}")
 
 
 def print_markdown(registry, status, zh):
@@ -221,14 +232,118 @@ def show(registry, key, target, zh):
     return 0
 
 
+def hint(registry, key, zh):
+    entry = find(registry, key)
+    hints = load_hints()
+    if entry["name"] not in hints:
+        print(f"no hint for {entry['name']} yet")
+        return 0
+    print(hints[entry["name"]]["zh" if zh else "en"])
+    return 0
+
+
+def reset(registry, key, target, force):
+    """Overwrite one exercise with a fresh stub."""
+    sys.path.insert(0, str(ROOT / "tools"))
+    import make_exercises
+
+    entry = find(registry, key)
+    path = ROOT / file_of(entry, target)
+    stub, _ = make_exercises.strip_solutions(
+        (ROOT / "solutions" / entry["track"] / f"{entry['name']}.py").read_text(encoding="utf-8"),
+        entry["name"],
+    )
+    if path.exists() and path.read_text(encoding="utf-8") == stub:
+        print(f"{file_of(entry, target)} is already a fresh stub")
+        return 0
+    if not force:
+        print(f"This throws away your answer in {file_of(entry, target)}.")
+        try:
+            answer = input("Type 'yes' to continue: ")
+        except EOFError:
+            # not a terminal, so nobody can answer
+            print("\nnothing was changed; pass --force to reset without asking")
+            return 1
+        if answer.strip().lower() != "yes":
+            print("nothing was changed")
+            return 1
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(stub, encoding="utf-8", newline="\n")
+    print(f"reset {file_of(entry, target)}")
+    return 0
+
+
+def snapshot(folder):
+    """What the exercise files look like right now, for spotting edits."""
+    out = {}
+    for path in sorted(pathlib.Path(folder).rglob("*.py")):
+        try:
+            info = path.stat()
+        except OSError:  # deleted between the glob and the stat
+            continue
+        out[path] = (info.st_mtime_ns, info.st_size)
+    return out
+
+
+def changed_exercises(registry, target, before, after):
+    """Names of the exercises whose file differs between two snapshots."""
+    touched = {path for path in set(before) | set(after) if before.get(path) != after.get(path)}
+    names = []
+    for entry in registry:
+        if (ROOT / file_of(entry, target)).resolve() in {p.resolve() for p in touched}:
+            names.append(entry["name"])
+    return names
+
+
+def watch(registry, target, zh, interval=0.4):
+    """Rerun an exercise every time its file is saved.
+
+    Every check runs in a fresh process. Within one process, pytest keeps the
+    test modules in ``sys.modules``, and those hold the functions loaded at
+    import time, so a second run would still be testing the code as it was
+    when the watch started.
+    """
+    common = ["--target", target] + (["--zh"] if zh else [])
+
+    def cli(*args):
+        subprocess.run([sys.executable, str(ROOT / "robolings.py"), *args, *common], cwd=ROOT)
+
+    folder = ROOT / target
+    cli("--brief")
+    print("\nWatching for changes. Press Ctrl-C to stop.")
+
+    before = snapshot(folder)
+    try:
+        while True:
+            time.sleep(interval)
+            after = snapshot(folder)
+            names = changed_exercises(registry, target, before, after)
+            before = after
+            for name in names:
+                print(f"\n--- {name} changed")
+                cli("run", name)
+            if names:
+                cli("--brief")
+    except KeyboardInterrupt:
+        print("\nStopped.")
+        return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description="Small exercises for robot learning.")
-    parser.add_argument("command", nargs="?", default="progress", choices=["progress", "run", "show", "list"])
+    parser.add_argument(
+        "command",
+        nargs="?",
+        default="progress",
+        choices=["progress", "watch", "run", "show", "hint", "reset", "list"],
+    )
     parser.add_argument("exercise", nargs="?")
     parser.add_argument("--target", default="exercises", choices=["exercises", "solutions"])
-    parser.add_argument("--zh", action="store_true", help="Chinese titles and statements")
+    parser.add_argument("--zh", action="store_true", help="Chinese titles, statements and hints")
     parser.add_argument("--markdown", action="store_true")
+    parser.add_argument("--brief", action="store_true", help="progress without the per-exercise list")
     parser.add_argument("--badge", metavar="FILE", help="also write a progress badge (SVG)")
+    parser.add_argument("--force", action="store_true", help="reset without asking")
     parser.add_argument("--expect", choices=["all-pass", "all-fail"])
     args = parser.parse_args()
 
@@ -244,18 +359,25 @@ def main():
             print(f"{number:2d}  {entry['name']:<22} {title:<45} {file_of(entry, args.target)}")
         return 0
 
-    if args.command in ("run", "show"):
+    if args.command in ("run", "show", "hint", "reset"):
         if not args.exercise:
             raise SystemExit(f"usage: python robolings.py {args.command} <name>")
         if args.command == "run":
             return run_one(registry, args.exercise, args.target)
-        return show(registry, args.exercise, args.target, zh)
+        if args.command == "show":
+            return show(registry, args.exercise, args.target, zh)
+        if args.command == "hint":
+            return hint(registry, args.exercise, zh)
+        return reset(registry, args.exercise, args.target, args.force)
+
+    if args.command == "watch":
+        return watch(registry, args.target, zh)
 
     status = grade(registry, run_all(args.target))
     if args.markdown:
         print_markdown(registry, status, zh)
     else:
-        print_progress(registry, status, args.target, zh)
+        print_progress(registry, status, args.target, zh, args.brief)
 
     if args.badge:
         done = sum(1 for s in status.values() if s == "done")
