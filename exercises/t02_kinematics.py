@@ -39,6 +39,7 @@ def forward_kinematics(origins, axes, q):
     Returns a ``(n, 4, 4)`` array where entry ``i`` is the frame of link
     ``i`` expressed in the world frame.
     """
+
     raise NotImplementedError("TODO: write this function")
 
 

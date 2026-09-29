@@ -22,6 +22,7 @@ def cosine_schedule(num_steps, s=0.008, max_beta=0.999):
 
     Returns ``(betas, alphas_cumprod)``, each ``(num_steps,)``.
     """
+
     # >>> solution
     def f(u):
         return np.cos((u + s) / (1.0 + s) * np.pi / 2.0) ** 2
