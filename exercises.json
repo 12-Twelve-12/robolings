@@ -10,5 +10,9 @@
   {"id": "09", "module": "t02_kinematics", "functions": ["dls_ik_step"], "test": "TestEx09DlsIkStep", "title": "Damped least squares IK step", "title_zh": "阻尼最小二乘逆解"},
   {"id": "10", "module": "t03_hand", "functions": ["expand_mimic"], "test": "TestEx10ExpandMimic", "title": "Coupled (mimic) joints", "title_zh": "耦合关节展开"},
   {"id": "11", "module": "t03_hand", "functions": ["retarget_cost"], "test": "TestEx11RetargetCost", "title": "Vector retargeting cost", "title_zh": "向量重定向代价"},
-  {"id": "12", "module": "t03_hand", "functions": ["fingertip_ik"], "test": "TestEx12FingertipIk", "title": "Fingertip IK with joint limits", "title_zh": "带关节限位的指尖逆解"}
+  {"id": "12", "module": "t03_hand", "functions": ["fingertip_ik"], "test": "TestEx12FingertipIk", "title": "Fingertip IK with joint limits", "title_zh": "带关节限位的指尖逆解"},
+  {"id": "13", "module": "t04_control", "functions": ["min_jerk"], "test": "TestEx13MinJerk", "title": "Minimum-jerk trajectory", "title_zh": "最小加加速度轨迹"},
+  {"id": "14", "module": "t04_control", "functions": ["lowpass_filter"], "test": "TestEx14LowpassFilter", "title": "First-order low-pass filter", "title_zh": "一阶低通滤波"},
+  {"id": "15", "module": "t04_control", "functions": ["mit_torque"], "test": "TestEx15MitTorque", "title": "MIT-mode impedance control", "title_zh": "MIT 模式阻抗控制"},
+  {"id": "16", "module": "t04_control", "functions": ["rate_limit"], "test": "TestEx16RateLimit", "title": "Command rate limiter", "title_zh": "指令限速"}
 ]
