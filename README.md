@@ -68,6 +68,18 @@ Use **Sync fork** on GitHub, or merge `upstream/main`. New exercises arrive as n
 | Diffusion policy | 4 | cosine schedule, forward process, DDPM step, DDIM step |
 | Flow matching | 3 | training target, Euler sampler, midpoint sampler |
 
+## Roadmap
+
+The tracks are not meant to stay the size they are now. The gaps, roughly in the order they matter:
+
+- **Dexterous hands** (3) is the thinnest track. Grasp analysis and contact mechanics are missing entirely.
+- **Kinematics** (4) has no closed-form IK, and nothing on redundancy or singularities.
+- **Diffusion policy** (4) and **flow matching** (3) are missing the knobs that matter at sampling time.
+
+Two directions have no track at all yet: perception (camera projection, depth back-projection, point-cloud registration) and state estimation (complementary filter, IMU attitude, one EKF step). Neither is avoidable in a real stack. If you want to start one, open an issue first — the shape of a track matters more than any single exercise in it.
+
+Issues labelled [`new exercise`](https://github.com/12-Twelve-12/robolings/labels/new%20exercise) are ideas nobody has started.
+
 ## Notes
 
 - Quaternions are `[w, x, y, z]`, Hamilton convention.
