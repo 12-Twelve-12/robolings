@@ -185,3 +185,62 @@ class TestSlerp:
             q = m.slerp(a, b, RNG.uniform())
             assert q.shape == (4,)
             assert np.isclose(np.linalg.norm(q), 1.0)
+
+
+class TestKabsch:
+    def test_recovers_a_known_transform(self):
+        for _ in range(10):
+            P = RNG.normal(size=(12, 3))
+            R_true = euler_matrix(*RNG.uniform(-3.0, 3.0, size=3))
+            t_true = RNG.normal(size=3)
+            R, t = m.kabsch(P, P @ R_true.T + t_true)
+            assert R.shape == (3, 3)
+            assert t.shape == (3,)
+            assert np.allclose(R, R_true, atol=1e-9)
+            assert np.allclose(t, t_true, atol=1e-9)
+
+    def test_pure_translation(self):
+        P = RNG.normal(size=(6, 3))
+        R, t = m.kabsch(P, P + [0.5, -1.0, 2.0])
+        assert np.allclose(R, np.eye(3), atol=1e-9)
+        assert np.allclose(t, [0.5, -1.0, 2.0], atol=1e-9)
+
+    def test_points_in_a_plane(self):
+        # A calibration board. The third singular value is zero here.
+        for _ in range(20):
+            P = RNG.normal(size=(9, 3))
+            P[:, 2] = 0.0
+            R_true = euler_matrix(*RNG.uniform(-3.0, 3.0, size=3))
+            t_true = RNG.normal(size=3)
+            R, t = m.kabsch(P, P @ R_true.T + t_true)
+            assert np.allclose(R, R_true, atol=1e-9)
+            assert np.allclose(t, t_true, atol=1e-9)
+
+    def test_never_returns_a_reflection(self):
+        # Q is the mirror image of P, so no rotation fits exactly.
+        for _ in range(10):
+            P = RNG.normal(size=(20, 3))
+            R, _ = m.kabsch(P, P * [1.0, 1.0, -1.0])
+            assert is_rotation(R)
+
+    def test_is_the_best_rotation(self):
+        P = RNG.normal(size=(15, 3))
+        Q = P * [1.0, 1.0, -1.0] + [0.2, 0.0, -0.4]
+        R, t = m.kabsch(P, Q)
+
+        def residual(R_, t_):
+            return np.sum((P @ R_.T + t_ - Q) ** 2)
+
+        best = residual(R, t)
+        for _ in range(200):
+            other = euler_matrix(*RNG.uniform(-3.0, 3.0, size=3))
+            assert best <= residual(other, Q.mean(axis=0) - other @ P.mean(axis=0)) + 1e-9
+
+    def test_with_noise(self):
+        P = RNG.normal(size=(50, 3))
+        R_true = euler_matrix(0.4, -0.9, 1.3)
+        Q = P @ R_true.T + [0.1, 0.2, 0.3] + 1e-3 * RNG.normal(size=(50, 3))
+        R, t = m.kabsch(P, Q)
+        assert is_rotation(R)
+        assert np.allclose(R, R_true, atol=5e-3)
+        assert np.allclose(t, [0.1, 0.2, 0.3], atol=5e-3)

@@ -2,7 +2,7 @@
 
 机器人学习方向的闯关练习，形式照搬 [rustlings](https://github.com/rust-lang/rustlings)。
 
-一共 25 个小函数要你自己实现，从罗德里格斯公式开始，做到流匹配策略的采样器为止。只依赖 NumPy，不需要显卡和仿真器，全部测试不到 1 秒跑完。
+一共 31 个小函数要你自己实现，从罗德里格斯公式开始，做到流匹配策略的采样器为止。只依赖 NumPy，不需要显卡和仿真器，全部测试不到 1 秒跑完。
 
 [English](README.md)
 
@@ -24,15 +24,15 @@ python robolings.py --zh              # 题目名显示中文
 题目在 `exercises/` 里，一题一个文件。把 `raise NotImplementedError` 换成你的实现，再跑一次就行。需要 Python 3.10 以上。
 
 ```text
-robolings  [#######.......................]  6/25
+robolings  [######........................]  6/31
 
   01_rotations
    [x]  1  rodrigues              Rodrigues' rotation formula
    [x]  2  quat_mul               Quaternion product
    ...
   02_kinematics
-   [x]  6  transform_inverse      Inverse of a homogeneous transform
-   [ ]  7  forward_kinematics     Forward kinematics of a serial chain
+   [x]  7  transform_inverse      Inverse of a homogeneous transform
+   [ ]  8  forward_kinematics     Forward kinematics of a serial chain
 
 Next: forward_kinematics
   edit   exercises/02_kinematics/forward_kinematics.py
@@ -53,13 +53,13 @@ Next: forward_kinematics
 
 | 专题 | 题数 | 内容 |
 |---|---|---|
-| 旋转 | 5 | 罗德里格斯公式、四元数乘法、四元数与矩阵互转、球面插值 |
+| 旋转 | 6 | 罗德里格斯公式、四元数乘法、四元数与矩阵互转、球面插值、Kabsch 点集配准 |
 | 运动学 | 4 | 齐次变换求逆、正运动学、几何雅可比、阻尼最小二乘 |
 | 灵巧手 | 3 | 耦合关节、重定向代价、带限位的指尖逆解 |
-| 控制 | 4 | 最小 jerk 轨迹、低通滤波、MIT 模式阻抗控制、指令限速 |
-| 模仿学习 | 4 | 归一化、动作分块、时间集成、观测历史 |
-| 扩散策略 | 3 | 余弦调度、前向加噪、DDIM 单步 |
-| 流匹配 | 2 | 训练目标、欧拉采样 |
+| 控制 | 6 | 最小 jerk 轨迹、低通滤波、MIT 模式阻抗控制、指令限速、角度回绕、抗积分饱和 PID |
+| 模仿学习 | 5 | 归一化、动作分块、相对动作、时间集成、观测历史 |
+| 扩散策略 | 4 | 余弦调度、前向加噪、DDPM 单步、DDIM 单步 |
+| 流匹配 | 3 | 训练目标、欧拉采样、中点法采样 |
 
 ## 说明
 

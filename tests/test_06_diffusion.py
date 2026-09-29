@@ -113,3 +113,49 @@ class TestDdimStep:
         # eps = 1: x0_pred = (1 - sqrt(0.75)) / 0.5, x_prev = 0.8 * x0_pred + 0.6
         expected = 0.8 * (1.0 - math.sqrt(0.75)) / 0.5 + 0.6
         assert np.allclose(m.ddim_step(np.array([1.0]), np.array([1.0]), 2, 1, self.ACP), [expected])
+
+
+class TestDdpmStep:
+    BETAS = np.array([0.1, 0.2, 0.3, 0.4])
+    ACP = np.cumprod(1.0 - BETAS)
+
+    def noised(self, x0, eps, t):
+        return math.sqrt(self.ACP[t]) * x0 + math.sqrt(1.0 - self.ACP[t]) * eps
+
+    def test_mean_is_the_posterior_mean(self):
+        # q(x_{t-1} | x_t, x_0) has a closed form that does not use eps.
+        x0 = RNG.normal(size=(2, 6, 3))
+        eps = RNG.normal(size=(2, 6, 3))
+        for t in (1, 2, 3):
+            x_t = self.noised(x0, eps, t)
+            out = m.ddpm_step(x_t, eps, t, self.BETAS, self.ACP, np.zeros_like(x0))
+            a_t, a_prev, beta = self.ACP[t], self.ACP[t - 1], self.BETAS[t]
+            expected = (
+                math.sqrt(a_prev) * beta / (1.0 - a_t) * x0
+                + math.sqrt(1.0 - beta) * (1.0 - a_prev) / (1.0 - a_t) * x_t
+            )
+            assert out.shape == x0.shape
+            assert np.allclose(out, expected)
+
+    def test_noise_is_scaled_by_the_posterior_std(self):
+        x_t = RNG.normal(size=(1, 4, 2))
+        eps = RNG.normal(size=(1, 4, 2))
+        noise = RNG.normal(size=(1, 4, 2))
+        for t in (1, 2, 3):
+            quiet = m.ddpm_step(x_t, eps, t, self.BETAS, self.ACP, np.zeros_like(noise))
+            noisy = m.ddpm_step(x_t, eps, t, self.BETAS, self.ACP, noise)
+            var = self.BETAS[t] * (1.0 - self.ACP[t - 1]) / (1.0 - self.ACP[t])
+            assert np.allclose(noisy - quiet, math.sqrt(var) * noise)
+
+    def test_last_step_adds_no_noise(self):
+        x0 = RNG.normal(size=(1, 4, 2))
+        eps = RNG.normal(size=(1, 4, 2))
+        x_t = self.noised(x0, eps, 0)
+        out = m.ddpm_step(x_t, eps, 0, self.BETAS, self.ACP, RNG.normal(size=(1, 4, 2)))
+        assert np.allclose(out, x0)
+
+    def test_known_values(self):
+        mean = (1.0 - 0.2 / math.sqrt(0.28) * 0.5) / math.sqrt(0.8)
+        std = math.sqrt(0.2 * 0.1 / 0.28)
+        out = m.ddpm_step(np.array([1.0]), np.array([0.5]), 1, self.BETAS, self.ACP, np.array([2.0]))
+        assert np.allclose(out, [mean + 2.0 * std])
