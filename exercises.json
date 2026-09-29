@@ -18,5 +18,8 @@
   {"id": "17", "module": "t05_imitation", "functions": ["minmax_normalize", "minmax_unnormalize"], "test": "TestEx17MinMax", "title": "Min-max normalisation and its inverse", "title_zh": "最小最大归一化与反归一化"},
   {"id": "18", "module": "t05_imitation", "functions": ["make_action_chunks"], "test": "TestEx18ActionChunks", "title": "Action chunking with padding", "title_zh": "动作分块与填充掩码"},
   {"id": "19", "module": "t05_imitation", "functions": ["temporal_ensemble"], "test": "TestEx19TemporalEnsemble", "title": "Temporal ensembling (ACT)", "title_zh": "时间集成（ACT）"},
-  {"id": "20", "module": "t05_imitation", "functions": ["stack_obs_history"], "test": "TestEx20ObsHistory", "title": "Observation history window", "title_zh": "观测历史窗口"}
+  {"id": "20", "module": "t05_imitation", "functions": ["stack_obs_history"], "test": "TestEx20ObsHistory", "title": "Observation history window", "title_zh": "观测历史窗口"},
+  {"id": "21", "module": "t06_diffusion", "functions": ["cosine_schedule"], "test": "TestEx21CosineSchedule", "title": "Cosine noise schedule", "title_zh": "余弦噪声调度"},
+  {"id": "22", "module": "t06_diffusion", "functions": ["q_sample"], "test": "TestEx22QSample", "title": "Forward diffusion", "title_zh": "前向加噪"},
+  {"id": "23", "module": "t06_diffusion", "functions": ["ddim_step"], "test": "TestEx23DdimStep", "title": "DDIM step", "title_zh": "DDIM 采样步"}
 ]
