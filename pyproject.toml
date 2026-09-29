@@ -7,21 +7,12 @@ select = ["E", "F", "W", "I", "B", "UP", "NPY"]
 
 [tool.ruff.lint.per-file-ignores]
 # the stubs import numpy for you, nothing uses it until you write the body
-"exercises/*" = ["F401"]
+"exercises/**" = ["F401"]
 # wrong answers are kept as source strings
 "tools/mutants.py" = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = [
-    "helpers",
-    "t01_rotations",
-    "t02_kinematics",
-    "t03_hand",
-    "t04_control",
-    "t05_imitation",
-    "t06_diffusion",
-    "t07_flow_matching",
-]
+known-first-party = ["helpers", "loader"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
