@@ -1551,6 +1551,331 @@ def ema_update(average, weights, step, max_decay=0.9999, warmup=10.0):
     return {k: (1.0 - decay) * np.asarray(average[k], dtype=np.float64) + decay * weights[k] for k in average}
 """,
     ),
+    (
+        "friction_cone",
+        "project_to_friction_cone",
+        "rescales the whole force instead of projecting it",
+        """
+def project_to_friction_cone(force, normal, mu):
+    f = np.asarray(force, dtype=np.float64)
+    n = np.asarray(normal, dtype=np.float64)
+    n = n / np.linalg.norm(n)
+    f_n = float(f @ n)
+    f_t = f - f_n * n
+    t_norm = float(np.linalg.norm(f_t))
+    if t_norm <= mu * f_n:
+        return f.copy()
+    if mu * t_norm <= -f_n:
+        return np.zeros(3)
+    return f * (mu * f_n / t_norm)
+""",
+    ),
+    (
+        "friction_cone",
+        "project_to_friction_cone",
+        "drops the tangential part instead of projecting onto the cone",
+        """
+def project_to_friction_cone(force, normal, mu):
+    f = np.asarray(force, dtype=np.float64)
+    n = np.asarray(normal, dtype=np.float64)
+    n = n / np.linalg.norm(n)
+    f_n = float(f @ n)
+    f_t = f - f_n * n
+    if np.linalg.norm(f_t) <= mu * f_n:
+        return f.copy()
+    if f_n <= 0.0:
+        return np.zeros(3)
+    return f_n * n
+""",
+    ),
+    (
+        "friction_cone",
+        "project_to_friction_cone",
+        "a force pressing into the surface is mirrored instead of dropped",
+        """
+def project_to_friction_cone(force, normal, mu):
+    f = np.asarray(force, dtype=np.float64)
+    n = np.asarray(normal, dtype=np.float64)
+    n = n / np.linalg.norm(n)
+    f_n = float(f @ n)
+    f_t = f - f_n * n
+    t_norm = float(np.linalg.norm(f_t))
+    if t_norm <= mu * f_n:
+        return f.copy()
+    if mu * t_norm <= -f_n:
+        return -f
+    s = (mu * t_norm + f_n) / (mu**2 + 1.0)
+    return s * n + mu * s * (f_t / t_norm)
+""",
+    ),
+    (
+        "force_closure",
+        "is_force_closure",
+        "only checks that the two normals oppose each other",
+        """
+def is_force_closure(contacts, normals, mu):
+    n = np.asarray(normals, dtype=np.float64)
+    n0 = n[0] / np.linalg.norm(n[0])
+    n1 = n[1] / np.linalg.norm(n[1])
+    return bool(n0 @ n1 < 0.0)
+""",
+    ),
+    (
+        "force_closure",
+        "is_force_closure",
+        "ignores mu, so only a perfectly aligned pair holds",
+        """
+def is_force_closure(contacts, normals, mu):
+    c = np.asarray(contacts, dtype=np.float64)
+    n = np.asarray(normals, dtype=np.float64)
+    d = c[1] - c[0]
+    length = np.linalg.norm(d)
+    if length == 0.0:
+        return False
+    d = d / length
+    for direction, normal in ((d, n[0]), (-d, n[1])):
+        unit = normal / np.linalg.norm(normal)
+        along = float(direction @ unit)
+        across = float(np.linalg.norm(direction - along * unit))
+        if along <= 0.0 or across > 1e-12:
+            return False
+    return True
+""",
+    ),
+    (
+        "force_closure",
+        "is_force_closure",
+        "tests the same direction at both contacts",
+        """
+def is_force_closure(contacts, normals, mu):
+    c = np.asarray(contacts, dtype=np.float64)
+    n = np.asarray(normals, dtype=np.float64)
+    d = c[1] - c[0]
+    length = np.linalg.norm(d)
+    if length == 0.0:
+        return False
+    d = d / length
+    for direction, normal in ((d, n[0]), (d, n[1])):
+        unit = normal / np.linalg.norm(normal)
+        along = float(direction @ unit)
+        across = float(np.linalg.norm(direction - along * unit))
+        if along <= 0.0 or across > mu * along + 1e-12:
+            return False
+    return True
+""",
+    ),
+    (
+        "coupled_jacobian",
+        "coupled_jacobian",
+        "the offset is folded into the derivative",
+        """
+def coupled_jacobian(J_full, n_joints, active_idx, mimic):
+    J = np.asarray(J_full, dtype=np.float64)
+    active = np.asarray(active_idx, dtype=int)
+    k = active.size
+    C = np.zeros((n_joints, k), dtype=np.float64)
+    C[active, np.arange(k)] = 1.0
+    column = {int(joint): index for index, joint in enumerate(active)}
+    for joint, source, multiplier, offset in mimic:
+        C[joint, column[source]] = multiplier + offset
+    return J @ C
+""",
+    ),
+    (
+        "coupled_jacobian",
+        "coupled_jacobian",
+        "the coupled joints contribute nothing",
+        """
+def coupled_jacobian(J_full, n_joints, active_idx, mimic):
+    J = np.asarray(J_full, dtype=np.float64)
+    active = np.asarray(active_idx, dtype=int)
+    k = active.size
+    C = np.zeros((n_joints, k), dtype=np.float64)
+    C[active, np.arange(k)] = 1.0
+    return J @ C
+""",
+    ),
+    (
+        "coupled_jacobian",
+        "coupled_jacobian",
+        "the multiplier is inverted",
+        """
+def coupled_jacobian(J_full, n_joints, active_idx, mimic):
+    J = np.asarray(J_full, dtype=np.float64)
+    active = np.asarray(active_idx, dtype=int)
+    k = active.size
+    C = np.zeros((n_joints, k), dtype=np.float64)
+    C[active, np.arange(k)] = 1.0
+    column = {int(joint): index for index, joint in enumerate(active)}
+    for joint, source, multiplier, offset in mimic:
+        C[joint, column[source]] = 1.0 / multiplier
+    return J @ C
+""",
+    ),
+    (
+        "ik_2link",
+        "ik_2link",
+        "the elbow term of q1 is left out",
+        """
+def ik_2link(x, y, l1, l2):
+    r2 = float(x) ** 2 + float(y) ** 2
+    cos_q2 = (r2 - l1**2 - l2**2) / (2.0 * l1 * l2)
+    if abs(cos_q2) > 1.0 + 1e-12:
+        return None
+    cos_q2 = np.clip(cos_q2, -1.0, 1.0)
+    sin_q2 = np.sqrt(1.0 - cos_q2**2)
+    out = np.empty((2, 2), dtype=np.float64)
+    for row, sign in enumerate((1.0, -1.0)):
+        q2 = np.arctan2(sign * sin_q2, cos_q2)
+        out[row] = (np.arctan2(y, x), q2)
+    return out
+""",
+    ),
+    (
+        "ik_2link",
+        "ik_2link",
+        "an unreachable target is clipped instead of rejected",
+        """
+def ik_2link(x, y, l1, l2):
+    r2 = float(x) ** 2 + float(y) ** 2
+    cos_q2 = (r2 - l1**2 - l2**2) / (2.0 * l1 * l2)
+    cos_q2 = np.clip(cos_q2, -1.0, 1.0)
+    sin_q2 = np.sqrt(1.0 - cos_q2**2)
+    out = np.empty((2, 2), dtype=np.float64)
+    for row, sign in enumerate((1.0, -1.0)):
+        q2 = np.arctan2(sign * sin_q2, cos_q2)
+        q1 = np.arctan2(y, x) - np.arctan2(l2 * np.sin(q2), l1 + l2 * np.cos(q2))
+        out[row] = (q1, q2)
+    return out
+""",
+    ),
+    (
+        "ik_2link",
+        "ik_2link",
+        "both rows return the same branch",
+        """
+def ik_2link(x, y, l1, l2):
+    r2 = float(x) ** 2 + float(y) ** 2
+    cos_q2 = (r2 - l1**2 - l2**2) / (2.0 * l1 * l2)
+    if abs(cos_q2) > 1.0 + 1e-12:
+        return None
+    cos_q2 = np.clip(cos_q2, -1.0, 1.0)
+    sin_q2 = np.sqrt(1.0 - cos_q2**2)
+    out = np.empty((2, 2), dtype=np.float64)
+    for row in (0, 1):
+        q2 = np.arctan2(sin_q2, cos_q2)
+        q1 = np.arctan2(y, x) - np.arctan2(l2 * np.sin(q2), l1 + l2 * np.cos(q2))
+        out[row] = (q1, q2)
+    return out
+""",
+    ),
+    (
+        "null_space_step",
+        "null_space_step",
+        "the secondary objective is added without the projector",
+        """
+def null_space_step(J, dx, q_secondary):
+    J = np.asarray(J, dtype=np.float64)
+    dx = np.asarray(dx, dtype=np.float64)
+    q_secondary = np.asarray(q_secondary, dtype=np.float64)
+    return np.linalg.pinv(J) @ dx + q_secondary
+""",
+    ),
+    (
+        "null_space_step",
+        "null_space_step",
+        "the transpose stands in for the pseudo-inverse",
+        """
+def null_space_step(J, dx, q_secondary):
+    J = np.asarray(J, dtype=np.float64)
+    dx = np.asarray(dx, dtype=np.float64)
+    q_secondary = np.asarray(q_secondary, dtype=np.float64)
+    J_pinv = J.T
+    projector = np.eye(J.shape[1]) - J_pinv @ J
+    return J_pinv @ dx + projector @ q_secondary
+""",
+    ),
+    (
+        "null_space_step",
+        "null_space_step",
+        "the projector is applied to the task term as well",
+        """
+def null_space_step(J, dx, q_secondary):
+    J = np.asarray(J, dtype=np.float64)
+    dx = np.asarray(dx, dtype=np.float64)
+    q_secondary = np.asarray(q_secondary, dtype=np.float64)
+    J_pinv = np.linalg.pinv(J)
+    projector = np.eye(J.shape[1]) - J_pinv @ J
+    return projector @ (J_pinv @ dx + q_secondary)
+""",
+    ),
+    (
+        "manipulability",
+        "manipulability",
+        "uses J.T @ J, which is singular whenever there are spare joints",
+        """
+def manipulability(J):
+    J = np.asarray(J, dtype=np.float64)
+    return float(np.sqrt(max(np.linalg.det(J.T @ J), 0.0)))
+""",
+    ),
+    (
+        "manipulability",
+        "manipulability",
+        "falls back to det(J), which only exists for a square Jacobian",
+        """
+def manipulability(J):
+    J = np.asarray(J, dtype=np.float64)
+    if J.shape[0] != J.shape[1]:
+        return 0.0
+    return float(abs(np.linalg.det(J)))
+""",
+    ),
+    (
+        "manipulability",
+        "manipulability",
+        "the square root is left out",
+        """
+def manipulability(J):
+    J = np.asarray(J, dtype=np.float64)
+    if J.shape[0] > J.shape[1]:
+        return 0.0
+    return float(np.linalg.det(J @ J.T))
+""",
+    ),
+    (
+        "cfg_noise",
+        "cfg_noise",
+        "the difference is the wrong way round",
+        """
+def cfg_noise(eps_cond, eps_uncond, scale):
+    eps_cond = np.asarray(eps_cond, dtype=np.float64)
+    eps_uncond = np.asarray(eps_uncond, dtype=np.float64)
+    return eps_uncond + scale * (eps_uncond - eps_cond)
+""",
+    ),
+    (
+        "cfg_noise",
+        "cfg_noise",
+        "the conditional prediction is used as the base",
+        """
+def cfg_noise(eps_cond, eps_uncond, scale):
+    eps_cond = np.asarray(eps_cond, dtype=np.float64)
+    eps_uncond = np.asarray(eps_uncond, dtype=np.float64)
+    return eps_cond + scale * (eps_cond - eps_uncond)
+""",
+    ),
+    (
+        "cfg_noise",
+        "cfg_noise",
+        "interpolates between the two instead of extrapolating",
+        """
+def cfg_noise(eps_cond, eps_uncond, scale):
+    eps_cond = np.asarray(eps_cond, dtype=np.float64)
+    eps_uncond = np.asarray(eps_uncond, dtype=np.float64)
+    return (1.0 - scale) * eps_cond + scale * eps_uncond
+""",
+    ),
 ]
 
 

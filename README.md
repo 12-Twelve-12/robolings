@@ -2,7 +2,7 @@
 
 Exercises for robot learning, in the style of [rustlings](https://github.com/rust-lang/rustlings).
 
-36 small functions to implement, starting at Rodrigues' formula and ending at the sampler of a flow-matching policy. NumPy only, no GPU, no simulator. The tests run in under a second.
+43 small functions to implement, starting at Rodrigues' formula and ending at the sampler of a flow-matching policy. NumPy only, no GPU, no simulator. The tests run in under a second.
 
 [中文说明](README.zh-CN.md) (the problem statements are available in Chinese too)
 
@@ -23,7 +23,7 @@ python robolings.py list
 The stubs are in `exercises/`, one file per exercise. Replace the `raise NotImplementedError` and run the exercise again. Python 3.10+.
 
 ```text
-robolings  [######........................]  6/36
+robolings  [######........................]  6/43
 
   01_rotations
    [x]  1  rodrigues              Rodrigues' rotation formula
@@ -61,20 +61,20 @@ Use **Sync fork** on GitHub, or merge `upstream/main`. New exercises arrive as n
 | Track | Exercises | Content |
 |---|---|---|
 | Rotations | 7 | Rodrigues, quaternion product, quaternion ↔ matrix, slerp, Kabsch, log and exp |
-| Kinematics | 4 | transform inverse, FK, geometric Jacobian, damped least squares |
-| Dexterous hands | 3 | mimic joints, retargeting cost, fingertip IK with joint limits |
+| Kinematics | 7 | transform inverse, FK, analytic two-link IK, geometric Jacobian, damped least squares, null-space projection, manipulability |
+| Dexterous hands | 6 | mimic joints, coupled Jacobian, retargeting cost, fingertip IK with joint limits, friction cone, force closure |
 | Control | 8 | min-jerk, trapezoidal profile, low-pass filter, MIT-mode impedance control, rate limiter, angle wrapping, PID with anti-windup, gravity compensation |
 | Imitation learning | 7 | normalisation, action chunking, DCT tokenisation, relative actions, temporal ensembling, obs history, weight EMA |
-| Diffusion policy | 4 | cosine schedule, forward process, DDPM step, DDIM step |
+| Diffusion policy | 5 | cosine schedule, forward process, DDPM step, DDIM step, classifier-free guidance |
 | Flow matching | 3 | training target, Euler sampler, midpoint sampler |
 
 ## Roadmap
 
 The tracks are not meant to stay the size they are now. The gaps, roughly in the order they matter:
 
-- **Dexterous hands** (3) is the thinnest track. Grasp analysis and contact mechanics are missing entirely.
-- **Kinematics** (4) has no closed-form IK, and nothing on redundancy or singularities.
-- **Diffusion policy** (4) and **flow matching** (3) are missing the knobs that matter at sampling time.
+- **Flow matching** (3) is the thinnest track, and the hardest to grow without repeating the diffusion one.
+- **Control** (8) has nothing on admittance control, or on reacting to a contact force that was measured rather than commanded.
+- **Imitation learning** (7) stops at the data pipeline. Nothing in it evaluates a trained policy.
 
 Two directions have no track at all yet: perception (camera projection, depth back-projection, point-cloud registration) and state estimation (complementary filter, IMU attitude, one EKF step). Neither is avoidable in a real stack. If you want to start one, open an issue first — the shape of a track matters more than any single exercise in it.
 
