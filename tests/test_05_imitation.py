@@ -130,3 +130,38 @@ class TestObsHistory:
         out = m.stack_obs_history(obs, 4)
         assert out.shape == (2, 4, 2)
         assert np.array_equal(out[1], [obs[0], obs[0], obs[0], obs[1]])
+
+
+class TestDeltaActions:
+    CHUNK = np.array([[1.0, 10.0], [2.0, 20.0], [4.0, 40.0]])
+    STATE = np.array([1.0, 5.0])
+
+    def test_relative_to_the_state(self):
+        delta = m.to_delta(self.CHUNK, self.STATE, [False, False])
+        assert delta.shape == (3, 2)
+        assert np.allclose(delta, [[0.0, 5.0], [1.0, 15.0], [3.0, 35.0]])
+
+    def test_absolute_dimensions_are_copied(self):
+        delta = m.to_delta(self.CHUNK, self.STATE, [False, True])
+        assert np.allclose(delta, [[0.0, 10.0], [1.0, 20.0], [3.0, 40.0]])
+
+    def test_from_delta_known_values(self):
+        delta = np.array([[0.0, 0.3], [0.5, 0.4]])
+        out = m.from_delta(delta, [2.0, 7.0], [False, True])
+        assert np.allclose(out, [[2.0, 0.3], [2.5, 0.4]])
+
+    def test_round_trip(self):
+        chunk = RNG.normal(size=(16, 7))
+        state = RNG.normal(size=7)
+        mask = np.array([False, False, True, False, False, False, True])
+        delta = m.to_delta(chunk, state, mask)
+        assert np.allclose(m.from_delta(delta, state, mask), chunk)
+        assert np.allclose(delta[:, mask], chunk[:, mask])
+        assert not np.allclose(delta[:, ~mask], chunk[:, ~mask])
+
+    def test_does_not_modify_input(self):
+        chunk = self.CHUNK.copy()
+        state = self.STATE.copy()
+        m.from_delta(m.to_delta(chunk, state, [False, True]), state, [False, True])
+        assert np.array_equal(chunk, self.CHUNK)
+        assert np.array_equal(state, self.STATE)

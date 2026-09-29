@@ -130,3 +130,111 @@ class TestRateLimit:
         for _ in range(40):
             cmd = m.rate_limit(target, cmd, 1.0, 0.01)
         assert np.allclose(cmd, target)
+
+
+class TestAngleDiff:
+    def test_wrap_leaves_small_angles_alone(self):
+        a = np.array([-3.0, -1.0, 0.0, 1.0, 3.0])
+        assert np.allclose(m.wrap_to_pi(a), a)
+
+    def test_wrap_known_values(self):
+        assert np.isclose(m.wrap_to_pi(1.5 * np.pi), -0.5 * np.pi)
+        assert np.isclose(m.wrap_to_pi(-1.5 * np.pi), 0.5 * np.pi)
+        assert np.isclose(m.wrap_to_pi(2.0 * np.pi), 0.0)
+        assert np.isclose(m.wrap_to_pi(7.0 * np.pi + 0.1), -np.pi + 0.1)
+        assert np.isclose(m.wrap_to_pi(-40.0 * np.pi - 0.2), -0.2)
+
+    def test_wrap_half_turn_may_have_either_sign(self):
+        for a in (np.pi, -np.pi, 3.0 * np.pi):
+            assert np.isclose(abs(m.wrap_to_pi(a)), np.pi)
+
+    def test_wrap_is_the_same_angle(self):
+        a = RNG.uniform(-50.0, 50.0, size=(3, 40))
+        w = m.wrap_to_pi(a)
+        assert w.shape == a.shape
+        assert np.all(w >= -np.pi - 1e-12) and np.all(w <= np.pi + 1e-12)
+        assert np.allclose(np.sin(w), np.sin(a))
+        assert np.allclose(np.cos(w), np.cos(a))
+
+    def test_diff_without_wrapping(self):
+        assert np.isclose(m.angle_diff(0.3, 0.1), 0.2)
+        assert np.isclose(m.angle_diff(0.1, 0.3), -0.2)
+
+    def test_diff_across_the_seam(self):
+        a, b = np.deg2rad(179.0), np.deg2rad(-179.0)
+        assert np.isclose(m.angle_diff(a, b), np.deg2rad(-2.0))
+        assert np.isclose(m.angle_diff(b, a), np.deg2rad(2.0))
+
+    def test_diff_with_many_turns(self):
+        assert np.isclose(m.angle_diff(0.1 + 4.0 * np.pi, 0.0), 0.1)
+        assert np.isclose(m.angle_diff(0.1, 6.0 * np.pi), 0.1)
+        assert np.isclose(m.angle_diff(3.0 + 2.0 * np.pi, -3.0), 6.0 - 2.0 * np.pi)
+
+    def test_diff_adds_back_to_the_same_angle(self):
+        a = RNG.uniform(-20.0, 20.0, size=100)
+        b = RNG.uniform(-20.0, 20.0, size=100)
+        d = m.angle_diff(a, b)
+        assert np.all(np.abs(d) <= np.pi + 1e-12)
+        assert np.allclose(np.sin(b + d), np.sin(a))
+        assert np.allclose(np.cos(b + d), np.cos(a))
+
+    def test_diff_broadcasts(self):
+        d = m.angle_diff(np.zeros((3, 1)), np.zeros(4))
+        assert d.shape == (3, 4)
+
+
+class TestPidStep:
+    def test_proportional(self):
+        u, state = m.pid_step((0.0, None), 0.5, 0.01, 4.0, 0.0, 0.0, 10.0)
+        assert np.isclose(u, 2.0)
+        assert np.isclose(state[0], 0.005)
+        assert state[1] == 0.5
+
+    def test_integral_accumulates(self):
+        u, state = m.pid_step((0.0, None), 1.0, 0.1, 0.0, 2.0, 0.0, 10.0)
+        assert np.isclose(u, 0.2)
+        u, state = m.pid_step(state, 1.0, 0.1, 0.0, 2.0, 0.0, 10.0)
+        assert np.isclose(u, 0.4)
+        assert np.isclose(state[0], 0.2)
+
+    def test_derivative(self):
+        _, state = m.pid_step((0.0, None), 1.0, 0.1, 0.0, 0.0, 0.5, 10.0)
+        u, _ = m.pid_step(state, 1.2, 0.1, 0.0, 0.0, 0.5, 10.0)
+        assert np.isclose(u, 1.0)
+        u, _ = m.pid_step(state, 0.8, 0.1, 0.0, 0.0, 0.5, 10.0)
+        assert np.isclose(u, -1.0)
+
+    def test_no_derivative_kick_on_the_first_call(self):
+        u, _ = m.pid_step((0.0, None), 1.0, 0.001, 2.0, 0.0, 5.0, 1e9)
+        assert np.isclose(u, 2.0)
+
+    def test_output_is_clipped(self):
+        assert m.pid_step((0.0, None), 1.0, 0.01, 100.0, 0.0, 0.0, 5.0)[0] == 5.0
+        assert m.pid_step((0.0, None), -1.0, 0.01, 100.0, 0.0, 0.0, 5.0)[0] == -5.0
+
+    def test_integral_does_not_grow_while_saturated(self):
+        state = (0.0, None)
+        for _ in range(100):
+            u, state = m.pid_step(state, 5.0, 0.1, 1.0, 1.0, 0.0, 2.0)
+            assert u == 2.0
+        assert np.isclose(state[0], 0.0)
+
+    def test_leaves_saturation_as_soon_as_the_error_changes_sign(self):
+        state = (0.0, None)
+        for _ in range(100):
+            _, state = m.pid_step(state, 5.0, 0.1, 1.0, 1.0, 0.0, 2.0)
+        u, _ = m.pid_step(state, -0.5, 0.1, 1.0, 1.0, 0.0, 2.0)
+        assert np.isclose(u, -0.55)
+
+    def test_integral_may_shrink_while_saturated(self):
+        # Saturated at the upper limit, but the error already points the other way.
+        u, state = m.pid_step((10.0, -1.0), -1.0, 0.1, 0.0, 1.0, 0.0, 2.0)
+        assert u == 2.0
+        assert np.isclose(state[0], 9.9)
+
+    def test_integrates_normally_below_the_limit(self):
+        state = (0.0, None)
+        for _ in range(10):
+            u, state = m.pid_step(state, 0.5, 0.1, 1.0, 1.0, 0.0, 2.0)
+        assert np.isclose(state[0], 0.5)
+        assert np.isclose(u, 1.0)

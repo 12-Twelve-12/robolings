@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 
 from loader import load_track
@@ -83,4 +85,47 @@ class TestEulerSample:
         x = RNG.normal(size=(3, 2))
         before = x.copy()
         m.euler_sample(lambda x_, t_: np.ones_like(x_), x, 5)
+        assert np.array_equal(x, before)
+
+
+class TestMidpointSample:
+    def test_constant_field(self):
+        x = RNG.normal(size=(2, 4, 3))
+        c = RNG.normal(size=(2, 4, 3))
+        out = m.midpoint_sample(lambda x_, t_: c, x, 5)
+        assert out.shape == x.shape
+        assert np.allclose(out, x + c)
+
+    def test_times_passed_to_the_network(self):
+        seen = []
+
+        def v_fn(x_, t_):
+            seen.append(float(t_))
+            return np.zeros_like(x_)
+
+        m.midpoint_sample(v_fn, np.zeros(3), 2)
+        assert np.allclose(seen, [0.0, 0.25, 0.5, 0.75])
+
+    def test_known_value(self):
+        # dx/dt = x, four steps: each step multiplies by 1 + dt + dt^2 / 2
+        out = m.midpoint_sample(lambda x_, t_: x_, np.array([1.0, -2.0]), 4)
+        assert np.allclose(out, np.array([1.0, -2.0]) * 1.28125**4)
+
+    def test_exact_when_the_field_is_linear_in_time(self):
+        for steps in (1, 3, 8):
+            out = m.midpoint_sample(lambda x_, t_: 2.0 * t_ * np.ones_like(x_), np.array([0.5, 1.5]), steps)
+            assert np.allclose(out, [1.5, 2.5])
+
+    def test_error_shrinks_with_the_square_of_the_step(self):
+        def error(steps):
+            out = m.midpoint_sample(lambda x_, t_: x_, np.array([1.0]), steps)
+            return abs(out[0] - math.e)
+
+        assert error(10) < 0.005
+        assert 3.5 < error(20) / error(40) < 4.5
+
+    def test_does_not_modify_input(self):
+        x = RNG.normal(size=(3, 2))
+        before = x.copy()
+        m.midpoint_sample(lambda x_, t_: np.ones_like(x_), x, 5)
         assert np.array_equal(x, before)
