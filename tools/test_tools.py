@@ -144,6 +144,35 @@ def test_language_from_the_environment(tmp_path):
     assert "球面线性插值" not in out
 
 
+def test_badge_shows_the_progress(tmp_path):
+    import xml.etree.ElementTree as ET
+
+    work = copy_with_solved_exercises(tmp_path)
+    (work / "exercises" / "01_rotations" / "slerp.py").unlink()
+    cli(work, "--badge", "badge.svg")
+    text = (work / "badge.svg").read_text(encoding="utf-8")
+    root = ET.fromstring(text)
+    assert root.tag.endswith("svg")
+    assert f">{TOTAL - 1}/{TOTAL}<" in text
+    assert "robolings" in text
+
+
+def test_badge_colours():
+    sys.path.insert(0, str(ROOT))
+    import robolings
+
+    def colour(done, total):
+        return re.search(
+            r'<rect x="\d+" width="\d+" height="20" fill="(#[0-9a-f]+)"', robolings.badge_svg(done, total)
+        )[1]
+
+    assert colour(0, 30) == "#9f9f9f"
+    assert colour(1, 30) == colour(9, 30) == "#fe7d37"
+    assert colour(10, 30) == colour(19, 30) == "#dfb317"
+    assert colour(20, 30) == colour(29, 30) == "#97ca00"
+    assert colour(30, 30) == "#4c1"
+
+
 def test_strip_replaces_the_marked_block():
     text = 'def f(x):\n    """doc"""\n    # >>> solution\n    return x\n    # <<< solution\n'
     out, blocks = make_exercises.strip_solutions(text, "f.py")

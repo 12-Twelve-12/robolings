@@ -7,6 +7,7 @@
     python robolings.py list          list every exercise
     python robolings.py --zh          Chinese titles and statements
     python robolings.py --markdown    progress as Markdown, for CI summaries
+    python robolings.py --badge FILE  also write a progress badge
 
 Set ROBOLINGS_LANG=zh to make --zh the default.
 
@@ -155,6 +156,36 @@ def print_markdown(registry, status, zh):
         print(f"| {mark} | `{entry['name']}` | {title_of(entry, zh)} | `{file_of(entry, 'exercises')}` |")
 
 
+def badge_svg(done, total):
+    """A small "robolings | 12/31" badge, drawn here so that no outside service is needed."""
+    label, value = "robolings", f"{done}/{total}"
+    if done == total:
+        color = "#4c1"
+    elif done == 0:
+        color = "#9f9f9f"
+    else:
+        color = ("#fe7d37", "#dfb317", "#97ca00")[min(3 * done // total, 2)]
+    left = 10 + round(6.5 * len(label))
+    right = 10 + round(6.5 * len(value))
+    width = left + right
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="20" role="img" '
+        f'aria-label="{label}: {value}">\n'
+        f"<title>{label}: {value}</title>\n"
+        '<linearGradient id="s" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/>'
+        '<stop offset="1" stop-opacity=".1"/></linearGradient>\n'
+        f'<clipPath id="r"><rect width="{width}" height="20" rx="3" fill="#fff"/></clipPath>\n'
+        f'<g clip-path="url(#r)"><rect width="{left}" height="20" fill="#555"/>'
+        f'<rect x="{left}" width="{right}" height="20" fill="{color}"/>'
+        f'<rect width="{width}" height="20" fill="url(#s)"/></g>\n'
+        '<g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" '
+        'font-size="11">'
+        f'<text x="{left / 2:g}" y="14">{label}</text>'
+        f'<text x="{left + right / 2:g}" y="14">{value}</text></g>\n'
+        "</svg>\n"
+    )
+
+
 def find(registry, key):
     if key.isdigit():
         position = int(key)
@@ -197,6 +228,7 @@ def main():
     parser.add_argument("--target", default="exercises", choices=["exercises", "solutions"])
     parser.add_argument("--zh", action="store_true", help="Chinese titles and statements")
     parser.add_argument("--markdown", action="store_true")
+    parser.add_argument("--badge", metavar="FILE", help="also write a progress badge (SVG)")
     parser.add_argument("--expect", choices=["all-pass", "all-fail"])
     args = parser.parse_args()
 
@@ -224,6 +256,10 @@ def main():
         print_markdown(registry, status, zh)
     else:
         print_progress(registry, status, args.target, zh)
+
+    if args.badge:
+        done = sum(1 for s in status.values() if s == "done")
+        pathlib.Path(args.badge).write_text(badge_svg(done, len(registry)), encoding="utf-8", newline="\n")
 
     if args.expect:
         wanted = "done" if args.expect == "all-pass" else "todo"
