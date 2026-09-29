@@ -23,6 +23,10 @@
     "en": "Follow the six steps in order. Step 4 is the one worth checking: after building R,\nassert that its determinant is +1 and not -1. The translation has to be computed\nfrom the final R, so it comes last.",
     "zh": "照着六步顺序做。第 4 步值得单独验一下：R 构造出来之后，确认它的行列式是 +1 而不是 -1。\n平移要用最终的 R 算，所以放在最后。"
   },
+  "quat_log_exp": {
+    "en": "Both functions need the same guard, at the same place: a norm in the denominator that goes to zero. Work out the limit of the ratio in each case, and return that instead of dividing.\nThe factor of two comes from the half-angle in the quaternion.",
+    "zh": "两个函数需要同一个保护，位置也一样：分母上那个会趋于零的模。分别把比值的极限求出来，到了那个范围就直接返回极限，不要做除法。\n那个 2 来自四元数里的半角。"
+  },
   "transform_inverse": {
     "en": "The rotation part of the inverse is R.T. The translation is -R.T @ p, not -p:\nthe old translation has to be expressed in the new frame.",
     "zh": "逆的旋转部分是 R.T，平移部分是 -R.T @ p 而不是 -p：\n原来的平移要换到新坐标系里表达。"
@@ -55,6 +59,10 @@
     "en": "s is a function of tau, and tau = t / duration, so the chain rule brings one factor\nof 1/duration into the velocity and two into the acceleration.",
     "zh": "s 是 tau 的函数，而 tau = t / duration，所以链式法则给速度带来一个 1/duration，\n给加速度带来两个。"
   },
+  "trapezoid": {
+    "en": "Work out the peak speed first. It is v_max on a long move and sqrt(a_max * distance) on a short one, and min() of the two covers both without a branch.\nOnce you have it, everything else follows: ramp time, ramp distance, cruise time. The deceleration phase is easiest to write in terms of the time left, not the time elapsed.",
+    "zh": "先把峰值速度求出来。长距离时是 v_max，短距离时是 sqrt(a_max * distance)，用 min() 取两者较小的就同时覆盖了两种情况，不用写分支。\n有了它，加速时间、加速距离、匀速时间都跟着出来。减速段用「还剩多少时间」来写比用「已经过了多少时间」简单得多。"
+  },
   "lowpass_filter": {
     "en": "Start the output at x[0], not at zero. Write to a fresh array rather than to x,\nand let NumPy broadcast the per-sample update over the trailing dimension.",
     "zh": "输出的第一个值取 x[0]，不是零。写进一个新数组而不是写回 x，\n每步的更新让 NumPy 在后面那一维上广播。"
@@ -75,6 +83,10 @@
     "en": "Compute u_raw before you clip, you need both to detect saturation. The integral is\nfrozen only when the output is clipped and u_raw and error have the same sign,\nso an error that is already pulling the output back stays effective.",
     "zh": "先算出 u_raw 再 clip，判断饱和需要两个值都在。只有在输出被截断、\n并且 u_raw 和 error 同号时才冻结积分，这样已经在把输出往回拉的误差仍然有效。"
   },
+  "gravity_torque": {
+    "en": "The angle that matters is the absolute one, the running sum of q up to that link, not q[i] itself. np.cumsum gives you all of them at once.\nJoint k carries every link from k onwards, so the sum runs from k to the end, not over link k alone.",
+    "zh": "起作用的是绝对角度，也就是 q 累加到该连杆为止的和，不是 q[i] 本身。np.cumsum 一次就能全算出来。\n关节 k 扛着从 k 开始往后的所有连杆，所以求和是从 k 到末尾，不是只算连杆 k。"
+  },
   "minmax": {
     "en": "Compute the span once and build a safe divisor with np.where before dividing, not\nafter: dividing first still evaluates the division and warns. The same guard,\nwith lo instead of 0, gives you the inverse.",
     "zh": "先算出 span，再用 np.where 造一个安全的除数，然后才做除法；先除再补会真的算一次\n除法并告警。反变换用同一个保护，只是把 0 换成 lo。"
@@ -82,6 +94,10 @@
   "action_chunks": {
     "en": "No loop needed. Build an index matrix with arange(T)[:, None] + arange(horizon),\ncompare it with T to get is_pad, and np.minimum it with T - 1 before indexing.",
     "zh": "不用写循环。用 arange(T)[:, None] + arange(horizon) 造一个索引矩阵，\n和 T 比较得到 is_pad，再用 np.minimum 压到 T - 1 之后去取值。"
+  },
+  "dct_tokens": {
+    "en": "Build the matrix with broadcasting: k as a column, i as a row. The scale factor differs only for the first row, and it is what makes the matrix orthonormal — check that with C @ C.T.\nOrthonormal means the inverse transform is the transpose, so detokenize needs no second matrix.",
+    "zh": "用广播来造矩阵：k 作列、i 作行。缩放系数只有第一行不同，正是它让矩阵成为标准正交的——用 C @ C.T 自查一下。\n标准正交意味着逆变换就是转置，所以 detokenize 不需要第二个矩阵。"
   },
   "delta_actions": {
     "en": "The same state is subtracted from every action in the chunk, so NumPy broadcasts\nit and no loop is needed. np.where with the mask keeps the absolute dimensions.",
@@ -94,6 +110,10 @@
   "obs_history": {
     "en": "Same trick as the action chunks, mirrored: the offsets run from -n + 1 to 0, and\nnp.maximum(idx, 0) repeats the first observation instead of wrapping to the end.",
     "zh": "和动作分块是同一个套路，只是方向相反：偏移从 -n + 1 到 0，\n用 np.maximum(idx, 0) 把开头重复出来，而不是绕到末尾去。"
+  },
+  "ema_weights": {
+    "en": "The ramp and the cap are both in one expression: min(max_decay, (1 + step) / (warmup + step)). Check what it gives at step 0.\nThe update must not write into the arrays it was given. The training loop is still holding those — they are the weights it is about to update.",
+    "zh": "斜坡和上限在同一个表达式里：min(max_decay, (1 + step) / (warmup + step))。先算一下 step 为 0 时它等于多少。\n更新不能写进传进来的数组。训练循环还拿着它们——那就是它接下来要更新的权重。"
   },
   "cosine_schedule": {
     "en": "betas[i] compares f at two consecutive steps, so compute f on arange(num_steps)\nand on arange(num_steps) + 1. alphas_cumprod is the cumulative product of\n1 - betas, so the cap on beta affects it too.",

@@ -244,3 +244,53 @@ class TestKabsch:
         assert is_rotation(R)
         assert np.allclose(R, R_true, atol=5e-3)
         assert np.allclose(t, [0.1, 0.2, 0.3], atol=5e-3)
+
+
+class TestQuatLogExp:
+    def test_zero_rotation(self):
+        out = m.quat_log([1.0, 0.0, 0.0, 0.0])
+        assert out.shape == (3,)
+        assert np.allclose(out, 0.0)
+        assert np.allclose(m.quat_exp([0.0, 0.0, 0.0]), [1.0, 0.0, 0.0, 0.0])
+
+    def test_matches_the_axis_angle_it_came_from(self):
+        for letter, axis in (("x", [1, 0, 0]), ("y", [0, 1, 0]), ("z", [0, 0, 1])):
+            for angle in (0.3, 1.2, 3.0):
+                q = axis_angle_quat(letter, angle)
+                assert np.allclose(m.quat_log(q), angle * np.array(axis), atol=1e-9)
+                assert same_rotation_quat(m.quat_exp(angle * np.array(axis)), q)
+
+    def test_sign_of_the_quaternion_does_not_matter(self):
+        for _ in range(20):
+            q = RNG.normal(size=4)
+            q = q / np.linalg.norm(q)
+            assert np.allclose(m.quat_log(q), m.quat_log(-q), atol=1e-9)
+
+    def test_takes_the_short_way(self):
+        # 300 degrees one way is 60 degrees the other
+        q = axis_angle_quat("z", np.deg2rad(300.0))
+        out = m.quat_log(q)
+        assert np.linalg.norm(out) <= np.pi + 1e-9
+        assert np.allclose(out, np.deg2rad(-60.0) * np.array([0.0, 0.0, 1.0]), atol=1e-9)
+
+    def test_small_rotations_stay_finite(self):
+        for angle in (0.0, 1e-14, 1e-10, 1e-7):
+            v = angle * np.array([0.0, 1.0, 0.0])
+            q = m.quat_exp(v)
+            assert np.all(np.isfinite(q))
+            assert np.isclose(np.linalg.norm(q), 1.0)
+            out = m.quat_log(q)
+            assert np.all(np.isfinite(out))
+            assert np.allclose(out, v, atol=1e-12)
+
+    def test_round_trip(self):
+        for _ in range(30):
+            v = RNG.normal(size=3)
+            v = v / np.linalg.norm(v) * RNG.uniform(0.0, np.pi - 1e-3)
+            assert np.allclose(m.quat_log(m.quat_exp(v)), v, atol=1e-9)
+
+    def test_exp_returns_a_unit_quaternion(self):
+        for _ in range(20):
+            q = m.quat_exp(RNG.uniform(-6.0, 6.0, size=3))
+            assert q.shape == (4,)
+            assert np.isclose(np.linalg.norm(q), 1.0)
