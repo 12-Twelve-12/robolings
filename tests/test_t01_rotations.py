@@ -156,6 +156,18 @@ class TestEx05Slerp:
         # -q1 is the same orientation; the path must not go the long way round.
         assert same_rotation_quat(m.slerp(q0, -q1, 0.5), axis_angle_quat("z", 0.5))
 
+    def test_identical_inputs(self):
+        # The dot product is exactly 1 here, on every platform, so sin(theta) is
+        # exactly 0. A robot holding still sends this all the time.
+        for q in ([1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]):
+            out = m.slerp(q, q, 0.3)
+            assert np.all(np.isfinite(out))
+            assert np.allclose(out, q)
+            # the same orientation with the opposite sign
+            out = m.slerp(q, [-v for v in q], 0.7)
+            assert np.all(np.isfinite(out))
+            assert same_rotation_quat(out, q)
+
     def test_nearly_identical_inputs(self):
         q0 = axis_angle_quat("x", 1.0)
         for delta in (0.0, 1e-12, 1e-9, 1e-6):
