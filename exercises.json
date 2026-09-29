@@ -7,5 +7,8 @@
   {"id": "06", "module": "t02_kinematics", "functions": ["transform_inverse"], "test": "TestEx06TransformInverse", "title": "Inverse of a homogeneous transform", "title_zh": "齐次变换求逆"},
   {"id": "07", "module": "t02_kinematics", "functions": ["forward_kinematics"], "test": "TestEx07ForwardKinematics", "title": "Forward kinematics of a serial chain", "title_zh": "串联链正运动学"},
   {"id": "08", "module": "t02_kinematics", "functions": ["geometric_jacobian"], "test": "TestEx08GeometricJacobian", "title": "Geometric Jacobian", "title_zh": "几何雅可比"},
-  {"id": "09", "module": "t02_kinematics", "functions": ["dls_ik_step"], "test": "TestEx09DlsIkStep", "title": "Damped least squares IK step", "title_zh": "阻尼最小二乘逆解"}
+  {"id": "09", "module": "t02_kinematics", "functions": ["dls_ik_step"], "test": "TestEx09DlsIkStep", "title": "Damped least squares IK step", "title_zh": "阻尼最小二乘逆解"},
+  {"id": "10", "module": "t03_hand", "functions": ["expand_mimic"], "test": "TestEx10ExpandMimic", "title": "Coupled (mimic) joints", "title_zh": "耦合关节展开"},
+  {"id": "11", "module": "t03_hand", "functions": ["retarget_cost"], "test": "TestEx11RetargetCost", "title": "Vector retargeting cost", "title_zh": "向量重定向代价"},
+  {"id": "12", "module": "t03_hand", "functions": ["fingertip_ik"], "test": "TestEx12FingertipIk", "title": "Fingertip IK with joint limits", "title_zh": "带关节限位的指尖逆解"}
 ]
