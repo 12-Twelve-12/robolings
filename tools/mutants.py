@@ -1239,6 +1239,318 @@ def midpoint_sample(v_fn, x, num_steps):
     return x
 """,
     ),
+    (
+        "quat_log_exp",
+        "quat_log",
+        "no short-way flip",
+        """
+def quat_log(q):
+    q = np.asarray(q, dtype=np.float64)
+    q = q / np.linalg.norm(q)
+    v = q[1:]
+    norm = np.linalg.norm(v)
+    if norm < 1e-8:
+        return 2.0 * v
+    return 2.0 * np.arctan2(norm, q[0]) * v / norm
+""",
+    ),
+    (
+        "quat_log_exp",
+        "quat_log",
+        "no small-angle guard",
+        """
+def quat_log(q):
+    q = np.asarray(q, dtype=np.float64)
+    q = q / np.linalg.norm(q)
+    if q[0] < 0.0:
+        q = -q
+    v = q[1:]
+    norm = np.linalg.norm(v)
+    with np.errstate(all="ignore"):
+        return 2.0 * np.arctan2(norm, q[0]) * v / norm
+""",
+    ),
+    (
+        "quat_log_exp",
+        "quat_log",
+        "half the angle",
+        """
+def quat_log(q):
+    q = np.asarray(q, dtype=np.float64)
+    q = q / np.linalg.norm(q)
+    if q[0] < 0.0:
+        q = -q
+    v = q[1:]
+    norm = np.linalg.norm(v)
+    if norm < 1e-8:
+        return v
+    return np.arctan2(norm, q[0]) * v / norm
+""",
+    ),
+    (
+        "quat_log_exp",
+        "quat_exp",
+        "forgets to halve the angle",
+        """
+def quat_exp(v):
+    v = np.asarray(v, dtype=np.float64)
+    theta = np.linalg.norm(v)
+    if theta < 1e-8:
+        q = np.concatenate(([1.0], 0.5 * v))
+        return q / np.linalg.norm(q)
+    q = np.concatenate(([np.cos(theta)], np.sin(theta) * v / theta))
+    return q / np.linalg.norm(q)
+""",
+    ),
+    (
+        "quat_log_exp",
+        "quat_exp",
+        "no small-angle guard",
+        """
+def quat_exp(v):
+    v = np.asarray(v, dtype=np.float64)
+    theta = np.linalg.norm(v)
+    with np.errstate(all="ignore"):
+        return np.concatenate(([np.cos(theta / 2.0)], np.sin(theta / 2.0) * v / theta))
+""",
+    ),
+    (
+        "trapezoid",
+        "trapezoid",
+        "assumes the speed limit is always reached",
+        """
+def trapezoid(distance, v_max, a_max, t):
+    distance = float(distance)
+    if distance <= 0.0:
+        return 0.0, 0.0
+    t_ramp = v_max / a_max
+    d_ramp = v_max * t_ramp / 2.0
+    t_flat = (distance - 2.0 * d_ramp) / v_max
+    total = 2.0 * t_ramp + t_flat
+    if t <= 0.0:
+        return 0.0, 0.0
+    if t >= total:
+        return distance, 0.0
+    if t < t_ramp:
+        return 0.5 * a_max * t * t, a_max * t
+    if t < t_ramp + t_flat:
+        return d_ramp + v_max * (t - t_ramp), v_max
+    left = total - t
+    return distance - 0.5 * a_max * left * left, a_max * left
+""",
+    ),
+    (
+        "trapezoid",
+        "trapezoid",
+        "deceleration measured from the wrong end",
+        """
+def trapezoid(distance, v_max, a_max, t):
+    distance = float(distance)
+    if distance <= 0.0:
+        return 0.0, 0.0
+    peak = min(v_max, np.sqrt(a_max * distance))
+    t_ramp = peak / a_max
+    d_ramp = peak * t_ramp / 2.0
+    t_flat = (distance - 2.0 * d_ramp) / peak
+    total = 2.0 * t_ramp + t_flat
+    if t <= 0.0:
+        return 0.0, 0.0
+    if t >= total:
+        return distance, 0.0
+    if t < t_ramp:
+        return 0.5 * a_max * t * t, a_max * t
+    if t < t_ramp + t_flat:
+        return d_ramp + peak * (t - t_ramp), peak
+    left = t - t_ramp - t_flat
+    return distance - 0.5 * a_max * left * left, a_max * left
+""",
+    ),
+    (
+        "trapezoid",
+        "trapezoid",
+        "does not stop at the end",
+        """
+def trapezoid(distance, v_max, a_max, t):
+    distance = float(distance)
+    if distance <= 0.0:
+        return 0.0, 0.0
+    peak = min(v_max, np.sqrt(a_max * distance))
+    t_ramp = peak / a_max
+    d_ramp = peak * t_ramp / 2.0
+    t_flat = (distance - 2.0 * d_ramp) / peak
+    total = 2.0 * t_ramp + t_flat
+    if t <= 0.0:
+        return 0.0, 0.0
+    if t < t_ramp:
+        return 0.5 * a_max * t * t, a_max * t
+    if t < t_ramp + t_flat:
+        return d_ramp + peak * (t - t_ramp), peak
+    left = total - t
+    return distance - 0.5 * a_max * left * left, a_max * left
+""",
+    ),
+    (
+        "gravity_torque",
+        "gravity_torque",
+        "relative angles instead of absolute",
+        """
+def gravity_torque(q, lengths, masses, com, g=9.81):
+    q = np.asarray(q, dtype=np.float64)
+    lengths = np.asarray(lengths, dtype=np.float64)
+    masses = np.asarray(masses, dtype=np.float64)
+    com = np.asarray(com, dtype=np.float64)
+    n = len(q)
+    tau = np.zeros(n)
+    for k in range(n):
+        total = 0.0
+        for i in range(k, n):
+            arm = com[i] * np.cos(q[i])
+            for j in range(k, i):
+                arm += lengths[j] * np.cos(q[j])
+            total += masses[i] * arm
+        tau[k] = g * total
+    return tau
+""",
+    ),
+    (
+        "gravity_torque",
+        "gravity_torque",
+        "each joint carries only its own link",
+        """
+def gravity_torque(q, lengths, masses, com, g=9.81):
+    q = np.asarray(q, dtype=np.float64)
+    masses = np.asarray(masses, dtype=np.float64)
+    com = np.asarray(com, dtype=np.float64)
+    absolute = np.cumsum(q)
+    return g * masses * com * np.cos(absolute)
+""",
+    ),
+    (
+        "gravity_torque",
+        "gravity_torque",
+        "sine instead of cosine",
+        """
+def gravity_torque(q, lengths, masses, com, g=9.81):
+    q = np.asarray(q, dtype=np.float64)
+    lengths = np.asarray(lengths, dtype=np.float64)
+    masses = np.asarray(masses, dtype=np.float64)
+    com = np.asarray(com, dtype=np.float64)
+    n = len(q)
+    absolute = np.cumsum(q)
+    tau = np.zeros(n)
+    for k in range(n):
+        total = 0.0
+        for i in range(k, n):
+            arm = com[i] * np.sin(absolute[i])
+            for j in range(k, i):
+                arm += lengths[j] * np.sin(absolute[j])
+            total += masses[i] * arm
+        tau[k] = g * total
+    return tau
+""",
+    ),
+    (
+        "dct_tokens",
+        "dct_matrix",
+        "no scale factors",
+        """
+def dct_matrix(n):
+    k = np.arange(n)[:, None]
+    i = np.arange(n)[None, :]
+    return np.cos(np.pi * (2 * i + 1) * k / (2 * n))
+""",
+    ),
+    (
+        "dct_tokens",
+        "dct_matrix",
+        "the same scale on every row",
+        """
+def dct_matrix(n):
+    k = np.arange(n)[:, None]
+    i = np.arange(n)[None, :]
+    return np.sqrt(2.0 / n) * np.cos(np.pi * (2 * i + 1) * k / (2 * n))
+""",
+    ),
+    (
+        "dct_tokens",
+        "tokenize",
+        "truncates instead of rounding",
+        """
+def tokenize(chunk, step):
+    chunk = np.asarray(chunk, dtype=np.float64)
+    return (dct_matrix(chunk.shape[0]) @ chunk / step).astype(np.int64)
+""",
+    ),
+    (
+        "dct_tokens",
+        "detokenize",
+        "forward transform instead of the inverse",
+        """
+def detokenize(tokens, step):
+    tokens = np.asarray(tokens, dtype=np.float64)
+    return dct_matrix(tokens.shape[0]) @ (tokens * step)
+""",
+    ),
+    (
+        "dct_tokens",
+        "detokenize",
+        "does not undo the scaling",
+        """
+def detokenize(tokens, step):
+    tokens = np.asarray(tokens, dtype=np.float64)
+    return dct_matrix(tokens.shape[0]).T @ tokens
+""",
+    ),
+    (
+        "ema_weights",
+        "ema_decay",
+        "constant decay, no ramp",
+        """
+def ema_decay(step, max_decay=0.9999, warmup=10.0):
+    return float(max_decay)
+""",
+    ),
+    (
+        "ema_weights",
+        "ema_decay",
+        "off by one in the ramp",
+        """
+def ema_decay(step, max_decay=0.9999, warmup=10.0):
+    return float(min(max_decay, step / (warmup + step)))
+""",
+    ),
+    (
+        "ema_weights",
+        "ema_decay",
+        "not capped",
+        """
+def ema_decay(step, max_decay=0.9999, warmup=10.0):
+    return float((1.0 + step) / (warmup + step))
+""",
+    ),
+    (
+        "ema_weights",
+        "ema_update",
+        "updates in place",
+        """
+def ema_update(average, weights, step, max_decay=0.9999, warmup=10.0):
+    decay = ema_decay(step, max_decay, warmup)
+    for k in average:
+        average[k] *= decay
+        average[k] += (1.0 - decay) * weights[k]
+    return average
+""",
+    ),
+    (
+        "ema_weights",
+        "ema_update",
+        "decay on the wrong term",
+        """
+def ema_update(average, weights, step, max_decay=0.9999, warmup=10.0):
+    decay = ema_decay(step, max_decay, warmup)
+    return {k: (1.0 - decay) * np.asarray(average[k], dtype=np.float64) + decay * weights[k] for k in average}
+""",
+    ),
 ]
 
 
