@@ -41,7 +41,7 @@ def main():
         if listed != ids:
             missing = sorted(set(ids) - set(listed))
             extra = sorted(set(listed) - set(ids))
-            problems.append(f"{name}: table does not list every exercise once (missing {missing}, extra {extra})")
+            problems.append(f"{name}: table is off (missing {missing}, extra {extra})")
 
     for problem in problems:
         print(problem)
