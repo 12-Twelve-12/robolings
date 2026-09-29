@@ -15,8 +15,11 @@ pip install -r requirements.txt
 python robolings.py           # 看进度和下一题
 python robolings.py run slerp # 只测某一题
 python robolings.py list
-python robolings.py --zh      # 题目名显示中文
+python robolings.py show slerp --zh   # 看中文题面
+python robolings.py --zh              # 题目名显示中文
 ```
+
+每道题都有中文题面，放在 `docs/zh/` 下，也可以用上面的 `show` 命令直接看。不想每次都加 `--zh` 的话，设置环境变量 `ROBOLINGS_LANG=zh`。
 
 题目在 `exercises/` 里，一题一个文件。把 `raise NotImplementedError` 换成你的实现，再跑一次就行。需要 Python 3.10 以上。
 

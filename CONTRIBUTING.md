@@ -31,6 +31,7 @@ Issues labelled `new exercise` are ideas nobody is working on yet. Leave a comme
 4. Add at least one wrong answer to `tools/mutants.py`.
 5. Regenerate the stubs with `python tools/make_exercises.py`. Don't edit `exercises/` by hand.
 6. Update the table and the exercise count in both READMEs.
+7. A Chinese statement in `docs/zh/<track>/<name>.md` is optional. If you don't write Chinese, leave it out and I'll add it.
 
 ## Before opening a PR
 
@@ -47,6 +48,8 @@ python -m pytest tools
 ```
 
 CI runs the same commands on Linux, macOS and Windows.
+
+If you change the docstring of an existing exercise, CI will tell you that its Chinese statement is out of date. Update it and run `python tools/check_docs.py --stamp`, or delete the file and say so in the PR.
 
 Don't rename or move an existing exercise. People have answers in their forks under the current path.
 
