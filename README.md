@@ -4,7 +4,7 @@ Exercises for robot learning, in the style of [rustlings](https://github.com/rus
 
 25 small functions to implement, starting at Rodrigues' formula and ending at the sampler of a flow-matching policy. NumPy only, no GPU, no simulator. The tests run in under a second.
 
-[中文说明](README.zh-CN.md)
+[中文说明](README.zh-CN.md) (the problem statements are available in Chinese too)
 
 ## Usage
 
@@ -14,6 +14,7 @@ Fork the repo and clone your fork, then:
 pip install -r requirements.txt
 python robolings.py           # progress, and what to do next
 python robolings.py run slerp # test a single exercise
+python robolings.py show slerp # print the problem statement
 python robolings.py list
 ```
 
