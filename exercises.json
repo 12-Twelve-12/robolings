@@ -11,7 +11,7 @@
   {"name": "expand_mimic", "track": "03_hand", "functions": ["expand_mimic"], "test": "TestExpandMimic", "title": "Coupled (mimic) joints", "title_zh": "耦合关节展开"},
   {"name": "retarget_cost", "track": "03_hand", "functions": ["retarget_cost"], "test": "TestRetargetCost", "title": "Vector retargeting cost", "title_zh": "向量重定向代价"},
   {"name": "fingertip_ik", "track": "03_hand", "functions": ["fingertip_ik"], "test": "TestFingertipIk", "title": "Fingertip IK with joint limits", "title_zh": "带关节限位的指尖逆解"},
-  {"name": "min_jerk", "track": "04_control", "functions": ["min_jerk"], "test": "TestMinJerk", "title": "Minimum-jerk trajectory", "title_zh": "最小加加速度轨迹"},
+  {"name": "min_jerk", "track": "04_control", "functions": ["min_jerk"], "test": "TestMinJerk", "title": "Minimum-jerk trajectory", "title_zh": "最小 jerk 轨迹"},
   {"name": "lowpass_filter", "track": "04_control", "functions": ["lowpass_filter"], "test": "TestLowpassFilter", "title": "First-order low-pass filter", "title_zh": "一阶低通滤波"},
   {"name": "mit_torque", "track": "04_control", "functions": ["mit_torque"], "test": "TestMitTorque", "title": "MIT-mode impedance control", "title_zh": "MIT 模式阻抗控制"},
   {"name": "rate_limit", "track": "04_control", "functions": ["rate_limit"], "test": "TestRateLimit", "title": "Command rate limiter", "title_zh": "指令限速"},
@@ -21,7 +21,7 @@
   {"name": "obs_history", "track": "05_imitation", "functions": ["stack_obs_history"], "test": "TestObsHistory", "title": "Observation history window", "title_zh": "观测历史窗口"},
   {"name": "cosine_schedule", "track": "06_diffusion", "functions": ["cosine_schedule"], "test": "TestCosineSchedule", "title": "Cosine noise schedule", "title_zh": "余弦噪声调度"},
   {"name": "q_sample", "track": "06_diffusion", "functions": ["q_sample"], "test": "TestQSample", "title": "Forward diffusion", "title_zh": "前向加噪"},
-  {"name": "ddim_step", "track": "06_diffusion", "functions": ["ddim_step"], "test": "TestDdimStep", "title": "DDIM step", "title_zh": "DDIM 采样步"},
+  {"name": "ddim_step", "track": "06_diffusion", "functions": ["ddim_step"], "test": "TestDdimStep", "title": "DDIM step", "title_zh": "DDIM 单步"},
   {"name": "flow_matching_target", "track": "07_flow_matching", "functions": ["flow_matching_target"], "test": "TestFlowMatchingTarget", "title": "Flow matching training target", "title_zh": "流匹配训练目标"},
   {"name": "euler_sample", "track": "07_flow_matching", "functions": ["euler_sample"], "test": "TestEulerSample", "title": "Euler sampler", "title_zh": "欧拉采样"}
 ]
