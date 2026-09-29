@@ -1,0 +1,7 @@
+[
+  {"id": "01", "module": "t01_rotations", "functions": ["rodrigues"], "test": "TestEx01Rodrigues", "title": "Rodrigues' rotation formula", "title_zh": "罗德里格斯旋转公式"},
+  {"id": "02", "module": "t01_rotations", "functions": ["quat_mul"], "test": "TestEx02QuatMul", "title": "Quaternion product", "title_zh": "四元数乘法"},
+  {"id": "03", "module": "t01_rotations", "functions": ["quat_to_matrix"], "test": "TestEx03QuatToMatrix", "title": "Quaternion to rotation matrix", "title_zh": "四元数转旋转矩阵"},
+  {"id": "04", "module": "t01_rotations", "functions": ["matrix_to_quat"], "test": "TestEx04MatrixToQuat", "title": "Rotation matrix to quaternion, robustly", "title_zh": "旋转矩阵转四元数（数值稳定）"},
+  {"id": "05", "module": "t01_rotations", "functions": ["slerp"], "test": "TestEx05Slerp", "title": "Spherical linear interpolation", "title_zh": "球面线性插值"}
+]
