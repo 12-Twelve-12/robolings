@@ -21,5 +21,7 @@
   {"id": "20", "module": "t05_imitation", "functions": ["stack_obs_history"], "test": "TestEx20ObsHistory", "title": "Observation history window", "title_zh": "观测历史窗口"},
   {"id": "21", "module": "t06_diffusion", "functions": ["cosine_schedule"], "test": "TestEx21CosineSchedule", "title": "Cosine noise schedule", "title_zh": "余弦噪声调度"},
   {"id": "22", "module": "t06_diffusion", "functions": ["q_sample"], "test": "TestEx22QSample", "title": "Forward diffusion", "title_zh": "前向加噪"},
-  {"id": "23", "module": "t06_diffusion", "functions": ["ddim_step"], "test": "TestEx23DdimStep", "title": "DDIM step", "title_zh": "DDIM 采样步"}
+  {"id": "23", "module": "t06_diffusion", "functions": ["ddim_step"], "test": "TestEx23DdimStep", "title": "DDIM step", "title_zh": "DDIM 采样步"},
+  {"id": "24", "module": "t07_flow_matching", "functions": ["flow_matching_target"], "test": "TestEx24FlowMatchingTarget", "title": "Flow matching training target", "title_zh": "流匹配训练目标"},
+  {"id": "25", "module": "t07_flow_matching", "functions": ["euler_sample"], "test": "TestEx25EulerSample", "title": "Euler sampler", "title_zh": "欧拉采样"}
 ]
