@@ -3,7 +3,9 @@
 python -m pytest tools
 """
 
+import json
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -14,6 +16,16 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 
 import make_exercises  # noqa: E402
+
+TOTAL = len(json.loads((ROOT / "exercises.json").read_text(encoding="utf-8")))
+
+
+def is_open(out, name):
+    return re.search(rf"^\s*\[ \]\s+\d+\s+{name}\s", out, flags=re.MULTILINE) is not None
+
+
+def is_done(out, name):
+    return re.search(rf"^\s*\[x\]\s+\d+\s+{name}\s", out, flags=re.MULTILINE) is not None
 
 
 def copy_with_solved_exercises(tmp_path):
@@ -40,24 +52,24 @@ def progress(work):
 
 def test_solved_copy_is_complete(tmp_path):
     out = progress(copy_with_solved_exercises(tmp_path))
-    assert "25/25" in out
+    assert f"{TOTAL}/{TOTAL}" in out
 
 
 def test_a_file_with_a_syntax_error_only_fails_its_own_exercise(tmp_path):
     work = copy_with_solved_exercises(tmp_path)
     (work / "exercises" / "01_rotations" / "slerp.py").write_text("def slerp(:\n", encoding="utf-8")
     out = progress(work)
-    assert "24/25" in out
-    assert "[ ]  5  slerp" in out
-    assert "[x]  4  matrix_to_quat" in out
+    assert f"{TOTAL - 1}/{TOTAL}" in out
+    assert is_open(out, "slerp")
+    assert is_done(out, "matrix_to_quat")
 
 
 def test_a_missing_file_only_fails_its_own_exercise(tmp_path):
     work = copy_with_solved_exercises(tmp_path)
     (work / "exercises" / "04_control" / "min_jerk.py").unlink()
     out = progress(work)
-    assert "24/25" in out
-    assert "[ ] 13  min_jerk" in out
+    assert f"{TOTAL - 1}/{TOTAL}" in out
+    assert is_open(out, "min_jerk")
 
 
 def test_a_renamed_function_only_fails_its_own_exercise(tmp_path):
@@ -68,13 +80,14 @@ def test_a_renamed_function_only_fails_its_own_exercise(tmp_path):
         encoding="utf-8",
     )
     out = progress(work)
-    assert "24/25" in out
-    assert "[ ] 17  minmax" in out
+    assert f"{TOTAL - 1}/{TOTAL}" in out
+    assert is_open(out, "minmax")
 
 
 def test_run_accepts_a_name_or_a_position(tmp_path):
     work = copy_with_solved_exercises(tmp_path)
-    for key in ("slerp", "5"):
+    names = [e["name"] for e in json.loads((ROOT / "exercises.json").read_text(encoding="utf-8"))]
+    for key in ("slerp", str(names.index("slerp") + 1)):
         result = subprocess.run(
             [sys.executable, "robolings.py", "run", key],
             cwd=work,
