@@ -27,6 +27,43 @@ class TestExpandMimic:
         assert np.allclose(q, [0.5, -0.5])
 
 
+class TestCoupledJacobian:
+    def test_matches_the_chain_rule(self):
+        # Joints 0 and 1 are driven, joint 2 follows joint 1 at half rate,
+        # joint 3 is dead.
+        J = RNG.normal(size=(3, 4))
+        C = np.array([[1.0, 0.0], [0.0, 1.0], [0.0, 0.5], [0.0, 0.0]])
+        out = m.coupled_jacobian(J, 4, [0, 1], [(2, 1, 0.5, 0.0)])
+        assert out.shape == (3, 2)
+        assert np.allclose(out, J @ C)
+
+    def test_the_offset_is_a_constant_and_stays_out(self):
+        J = RNG.normal(size=(3, 4))
+        plain = m.coupled_jacobian(J, 4, [0, 1], [(2, 1, 0.5, 0.0)])
+        shifted = m.coupled_jacobian(J, 4, [0, 1], [(2, 1, 0.5, 7.25)])
+        assert np.allclose(plain, shifted)
+
+    def test_source_indexes_the_full_vector_not_the_column(self):
+        # The actuated joints are 3 and 0, in that order, so a joint that
+        # follows joint 3 belongs in column 0.
+        J = RNG.normal(size=(2, 4))
+        C = np.zeros((4, 2))
+        C[3, 0] = 1.0
+        C[0, 1] = 1.0
+        C[1, 0] = 2.0
+        out = m.coupled_jacobian(J, 4, [3, 0], [(1, 3, 2.0, 0.0)])
+        assert np.allclose(out, J @ C)
+
+    def test_without_mimics_it_selects_columns(self):
+        J = RNG.normal(size=(3, 5))
+        assert np.allclose(m.coupled_jacobian(J, 5, [4, 2], []), J[:, [4, 2]])
+
+    def test_a_negative_multiplier(self):
+        J = RNG.normal(size=(3, 3))
+        C = np.array([[1.0], [-1.5], [0.0]])
+        assert np.allclose(m.coupled_jacobian(J, 3, [0], [(1, 0, -1.5, 0.0)]), J @ C)
+
+
 class TestRetargetCost:
     def test_zero_at_a_perfect_match(self):
         human = RNG.normal(size=(5, 3))
@@ -110,3 +147,86 @@ class TestFingertipIk:
         before = q0.copy()
         self.solve(chain.tip([0.3, 0.3, 0.3]), q0, iters=5)
         assert np.array_equal(q0, before)
+
+
+class TestFrictionCone:
+    def test_inside_the_cone_is_returned_unchanged(self):
+        force = np.array([0.1, 0.0, 1.0])
+        out = m.project_to_friction_cone(force, [0.0, 0.0, 1.0], 0.5)
+        assert out.shape == (3,)
+        assert np.allclose(out, force)
+
+    def test_the_projection_lands_on_the_cone(self):
+        out = m.project_to_friction_cone([2.0, 0.0, 1.0], [0.0, 0.0, 1.0], 0.5)
+        assert np.isclose(np.linalg.norm(out[:2]), 0.5 * out[2])
+
+    def test_pointing_into_the_surface_gives_zero(self):
+        out = m.project_to_friction_cone([0.1, 0.0, -1.0], [0.0, 0.0, 1.0], 0.5)
+        assert np.allclose(out, 0.0)
+
+    def test_the_projection_is_not_a_rescale(self):
+        # Shrinking the whole vector until it fits also shrinks the normal
+        # component. The projection increases it.
+        force = np.array([2.0, 0.0, 1.0])
+        out = m.project_to_friction_cone(force, [0.0, 0.0, 1.0], 0.5)
+        assert out[2] > force[2]
+
+    def test_a_tilted_normal_is_handled(self):
+        normal = np.array([1.0, 1.0, 1.0])
+        unit = normal / np.linalg.norm(normal)
+        force = np.array([1.0, -2.0, 0.5])
+        out = m.project_to_friction_cone(force, normal, 0.4)
+        normal_part = out @ unit
+        tangential = np.linalg.norm(out - normal_part * unit)
+        assert np.isclose(tangential, 0.4 * normal_part)
+
+    def test_the_normal_need_not_be_unit_length(self):
+        short = m.project_to_friction_cone([2.0, 0.0, 1.0], [0.0, 0.0, 1.0], 0.5)
+        long = m.project_to_friction_cone([2.0, 0.0, 1.0], [0.0, 0.0, 3.0], 0.5)
+        assert np.allclose(short, long)
+
+    def test_frictionless_keeps_only_the_normal_part(self):
+        out = m.project_to_friction_cone([2.0, -1.0, 1.0], [0.0, 0.0, 1.0], 0.0)
+        assert np.allclose(out, [0.0, 0.0, 1.0])
+
+
+class TestForceClosure:
+    def test_normals_along_the_line_hold_without_friction(self):
+        assert m.is_force_closure([[0.0, 0.0], [1.0, 0.0]], [[1.0, 0.0], [-1.0, 0.0]], 0.0)
+
+    def test_a_tilt_inside_the_cone_holds(self):
+        tilt = np.deg2rad(30.0)
+        n0 = [np.cos(tilt), np.sin(tilt)]
+        n1 = [-np.cos(tilt), np.sin(tilt)]
+        assert m.is_force_closure([[0.0, 0.0], [1.0, 0.0]], [n0, n1], np.tan(np.deg2rad(40.0)))
+
+    def test_a_tilt_outside_the_cone_slips(self):
+        tilt = np.deg2rad(30.0)
+        n0 = [np.cos(tilt), np.sin(tilt)]
+        n1 = [-np.cos(tilt), np.sin(tilt)]
+        assert not m.is_force_closure([[0.0, 0.0], [1.0, 0.0]], [n0, n1], np.tan(np.deg2rad(20.0)))
+
+    def test_opposing_normals_are_not_enough(self):
+        # Antipodal, the normals point straight at each other's line, and the
+        # grasp still slips: neither cone contains the line joining them.
+        assert not m.is_force_closure([[0.0, 0.0], [1.0, 0.0]], [[0.0, 1.0], [0.0, -1.0]], 0.5)
+
+    def test_friction_can_rescue_a_tilted_pair(self):
+        tilt = np.deg2rad(35.0)
+        n0 = [np.cos(tilt), np.sin(tilt)]
+        n1 = [-np.cos(tilt), np.sin(tilt)]
+        contacts = [[0.0, 0.0], [1.0, 0.0]]
+        assert not m.is_force_closure(contacts, n0 and [n0, n1], 0.1)
+        assert m.is_force_closure(contacts, [n0, n1], 1.0)
+
+    def test_a_diagonal_pair(self):
+        contacts = [[0.0, 0.0], [1.0, 1.0]]
+        normals = [[1.0, 1.0], [-1.0, -1.0]]
+        assert m.is_force_closure(contacts, normals, 0.0)
+
+    def test_the_normals_need_not_be_unit_length(self):
+        assert m.is_force_closure([[0.0, 0.0], [2.0, 0.0]], [[5.0, 0.0], [-0.2, 0.0]], 0.0)
+
+    def test_returns_a_python_bool(self):
+        out = m.is_force_closure([[0.0, 0.0], [1.0, 0.0]], [[1.0, 0.0], [-1.0, 0.0]], 0.3)
+        assert type(out) is bool

@@ -159,3 +159,34 @@ class TestDdpmStep:
         std = math.sqrt(0.2 * 0.1 / 0.28)
         out = m.ddpm_step(np.array([1.0]), np.array([0.5]), 1, self.BETAS, self.ACP, np.array([2.0]))
         assert np.allclose(out, [mean + 2.0 * std])
+
+
+class TestCfgNoise:
+    def test_scale_zero_is_the_unconditional_prediction(self):
+        cond = RNG.normal(size=(2, 4))
+        uncond = RNG.normal(size=(2, 4))
+        assert np.allclose(m.cfg_noise(cond, uncond, 0.0), uncond)
+
+    def test_scale_one_is_the_conditional_prediction(self):
+        cond = RNG.normal(size=(2, 4))
+        uncond = RNG.normal(size=(2, 4))
+        assert np.allclose(m.cfg_noise(cond, uncond, 1.0), cond)
+
+    def test_it_extrapolates_past_the_conditional_prediction(self):
+        cond = np.array([1.0, 2.0])
+        uncond = np.array([0.0, 0.0])
+        assert np.allclose(m.cfg_noise(cond, uncond, 2.0), [2.0, 4.0])
+
+    def test_a_half_scale_sits_between_the_two(self):
+        cond = np.array([4.0, -2.0])
+        uncond = np.array([0.0, 2.0])
+        assert np.allclose(m.cfg_noise(cond, uncond, 0.5), [2.0, 0.0])
+
+    def test_identical_predictions_are_unaffected_by_the_scale(self):
+        eps = RNG.normal(size=(3, 3))
+        for scale in (0.0, 1.0, 5.0):
+            assert np.allclose(m.cfg_noise(eps, eps, scale), eps)
+
+    def test_the_shape_is_kept(self):
+        out = m.cfg_noise(RNG.normal(size=(3, 2, 5)), RNG.normal(size=(3, 2, 5)), 1.5)
+        assert out.shape == (3, 2, 5)

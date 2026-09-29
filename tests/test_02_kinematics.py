@@ -81,6 +81,54 @@ class TestForwardKinematics:
         assert np.allclose(tip[:3], [0.0, 0.0, 1.1], atol=1e-12)
 
 
+def fk_2link(q, l1, l2):
+    """Tip of a two-link planar arm, written out for the IK exercise."""
+    return np.array(
+        [
+            l1 * np.cos(q[0]) + l2 * np.cos(q[0] + q[1]),
+            l1 * np.sin(q[0]) + l2 * np.sin(q[0] + q[1]),
+        ]
+    )
+
+
+class TestIk2Link:
+    def test_both_solutions_reach_the_target(self):
+        l1, l2 = 1.0, 0.7
+        for _ in range(20):
+            radius = RNG.uniform(abs(l1 - l2) + 0.05, l1 + l2 - 0.05)
+            angle = RNG.uniform(-np.pi, np.pi)
+            target = radius * np.array([np.cos(angle), np.sin(angle)])
+            solutions = m.ik_2link(target[0], target[1], l1, l2)
+            assert solutions.shape == (2, 2)
+            for q in solutions:
+                assert np.allclose(fk_2link(q, l1, l2), target, atol=1e-9)
+
+    def test_the_branches_have_the_documented_signs(self):
+        solutions = m.ik_2link(0.9, 0.4, 1.0, 0.7)
+        assert solutions[0, 1] >= 0.0
+        assert solutions[1, 1] <= 0.0
+
+    def test_the_branches_are_distinct_away_from_the_boundary(self):
+        solutions = m.ik_2link(0.9, 0.4, 1.0, 0.7)
+        assert not np.allclose(solutions[0], solutions[1])
+
+    def test_too_far_is_unreachable(self):
+        assert m.ik_2link(2.0, 0.0, 1.0, 0.7) is None
+
+    def test_the_hole_in_the_middle_is_unreachable(self):
+        assert m.ik_2link(0.1, 0.0, 1.0, 0.7) is None
+
+    def test_the_outer_boundary_is_still_reachable(self):
+        solutions = m.ik_2link(1.7, 0.0, 1.0, 0.7)
+        assert solutions is not None
+        assert np.allclose(fk_2link(solutions[0], 1.0, 0.7), [1.7, 0.0], atol=1e-7)
+
+    def test_a_target_behind_the_base(self):
+        solutions = m.ik_2link(-0.8, -0.5, 1.0, 0.7)
+        for q in solutions:
+            assert np.allclose(fk_2link(q, 1.0, 0.7), [-0.8, -0.5], atol=1e-9)
+
+
 class TestGeometricJacobian:
     def test_planar_two_link_closed_form(self):
         l1, l2 = 0.4, 0.3
@@ -159,3 +207,65 @@ class TestDlsIkStep:
         dq = m.dls_ik_step(J, np.array([0.1, 0.0]), 0.1)
         assert np.all(np.isfinite(dq))
         assert np.linalg.norm(dq) < 1.0
+
+
+class TestNullSpaceStep:
+    def test_the_task_is_achieved(self):
+        J = RNG.normal(size=(3, 6))
+        dx = RNG.normal(size=3)
+        dq = m.null_space_step(J, dx, np.zeros(6))
+        assert dq.shape == (6,)
+        assert np.allclose(J @ dq, dx, atol=1e-9)
+
+    def test_the_secondary_objective_never_disturbs_the_task(self):
+        J = RNG.normal(size=(3, 6))
+        dx = RNG.normal(size=3)
+        for _ in range(10):
+            dq = m.null_space_step(J, dx, RNG.normal(size=6))
+            assert np.allclose(J @ dq, dx, atol=1e-9)
+
+    def test_zero_secondary_is_the_minimum_norm_solution(self):
+        J = RNG.normal(size=(3, 6))
+        dx = RNG.normal(size=3)
+        expected = np.linalg.pinv(J) @ dx
+        assert np.allclose(m.null_space_step(J, dx, np.zeros(6)), expected, atol=1e-9)
+
+    def test_the_secondary_objective_does_reach_the_joints(self):
+        J = RNG.normal(size=(3, 6))
+        dx = RNG.normal(size=3)
+        base = m.null_space_step(J, dx, np.zeros(6))
+        moved = m.null_space_step(J, dx, RNG.normal(size=6))
+        assert not np.allclose(base, moved)
+
+    def test_a_full_rank_square_jacobian_leaves_no_null_space(self):
+        J = RNG.normal(size=(4, 4))
+        dx = RNG.normal(size=4)
+        base = m.null_space_step(J, dx, np.zeros(4))
+        crowded = m.null_space_step(J, dx, RNG.normal(size=4))
+        assert np.allclose(base, crowded, atol=1e-9)
+
+
+class TestManipulability:
+    def test_matches_the_determinant_form(self):
+        for shape in ((3, 5), (2, 2), (4, 4), (3, 7)):
+            J = RNG.normal(size=shape)
+            assert np.isclose(m.manipulability(J), np.sqrt(np.linalg.det(J @ J.T)))
+
+    def test_zero_at_a_singularity(self):
+        J = np.array([[1.0, 2.0, 0.0], [2.0, 4.0, 0.0]])
+        assert m.manipulability(J) == pytest.approx(0.0, abs=1e-12)
+
+    def test_zero_when_the_task_has_more_dimensions_than_the_arm_has_joints(self):
+        assert m.manipulability(RNG.normal(size=(5, 3))) == pytest.approx(0.0, abs=1e-12)
+
+    def test_joint_order_does_not_change_it(self):
+        J = RNG.normal(size=(3, 6))
+        order = RNG.permutation(6)
+        assert np.isclose(m.manipulability(J), m.manipulability(J[:, order]))
+
+    def test_scaling_the_jacobian_scales_the_volume(self):
+        J = RNG.normal(size=(3, 5))
+        assert np.isclose(m.manipulability(2.0 * J), 8.0 * m.manipulability(J))
+
+    def test_returns_a_python_float(self):
+        assert type(m.manipulability(RNG.normal(size=(3, 4)))) is float
