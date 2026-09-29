@@ -238,3 +238,137 @@ class TestPidStep:
             u, state = m.pid_step(state, 0.5, 0.1, 1.0, 1.0, 0.0, 2.0)
         assert np.isclose(state[0], 0.5)
         assert np.isclose(u, 1.0)
+
+
+class TestTrapezoid:
+    def sample(self, distance, v_max, a_max, n=2001, span=None):
+        total = span if span is not None else 10.0
+        ts = np.linspace(-0.5, total, n)
+        out = np.array([m.trapezoid(distance, v_max, a_max, float(t)) for t in ts])
+        return ts, out[:, 0], out[:, 1]
+
+    def test_returns_floats(self):
+        pos, vel = m.trapezoid(1.0, 1.0, 1.0, 0.5)
+        assert type(pos) is float and type(vel) is float
+
+    def test_before_and_after_the_move(self):
+        assert m.trapezoid(2.0, 1.0, 1.0, -1.0) == (0.0, 0.0)
+        assert m.trapezoid(2.0, 1.0, 1.0, 0.0) == (0.0, 0.0)
+        pos, vel = m.trapezoid(2.0, 1.0, 1.0, 100.0)
+        assert np.isclose(pos, 2.0) and vel == 0.0
+
+    def test_long_move_reaches_the_speed_limit(self):
+        # ramps take 1 s and 0.5 m each, so 1 m of cruise at 1 m/s
+        for t, expected in ((0.5, (0.125, 0.5)), (1.0, (0.5, 1.0)), (1.5, (1.0, 1.0)), (2.0, (1.5, 1.0))):
+            assert np.allclose(m.trapezoid(2.0, 1.0, 1.0, t), expected)
+        assert np.allclose(m.trapezoid(2.0, 1.0, 1.0, 2.5), (1.875, 0.5))
+        assert np.allclose(m.trapezoid(2.0, 1.0, 1.0, 3.0), (2.0, 0.0))
+
+    def test_short_move_never_reaches_the_speed_limit(self):
+        # 0.25 m at a_max 1 peaks at sqrt(1 * 0.25) = 0.5 m/s, well under v_max,
+        # halfway through a move that lasts 2 * 0.5 / 1 = 1 s
+        assert np.allclose(m.trapezoid(0.25, 10.0, 1.0, 0.5), (0.125, 0.5))
+        _, pos, vel = self.sample(0.25, 10.0, 1.0)
+        assert vel.max() <= 0.5 + 1e-12
+        assert vel.max() > 0.49
+        assert pos.max() <= 0.25 + 1e-12
+        assert np.isclose(pos[-1], 0.25)
+
+    def test_never_overshoots(self):
+        for distance, v_max, a_max in ((0.05, 2.0, 1.0), (1.0, 0.5, 4.0), (3.0, 1.5, 0.5), (0.2, 0.3, 10.0)):
+            _, pos, vel = self.sample(distance, v_max, a_max)
+            assert pos.max() <= distance + 1e-9
+            assert vel.max() <= v_max + 1e-9
+            assert np.all(vel >= -1e-12)
+            assert np.isclose(pos[-1], distance)
+
+    def test_velocity_is_the_derivative_of_position(self):
+        h = 1e-6
+        for distance, v_max, a_max in ((2.0, 1.0, 1.0), (0.25, 10.0, 1.0)):
+            for t in (0.2, 0.9, 1.4, 2.2):
+                _, vel = m.trapezoid(distance, v_max, a_max, t)
+                hi, _ = m.trapezoid(distance, v_max, a_max, t + h)
+                lo, _ = m.trapezoid(distance, v_max, a_max, t - h)
+                assert np.isclose(vel, (hi - lo) / (2 * h), atol=1e-4)
+
+    def test_acceleration_never_exceeds_the_limit(self):
+        for distance, v_max, a_max in ((2.0, 1.0, 1.0), (0.25, 10.0, 1.0), (1.0, 0.5, 4.0)):
+            ts, _, vel = self.sample(distance, v_max, a_max, n=4001)
+            acc = np.diff(vel) / np.diff(ts)
+            assert np.abs(acc).max() <= a_max + 1e-3
+
+    def test_zero_distance(self):
+        assert m.trapezoid(0.0, 1.0, 1.0, 0.5) == (0.0, 0.0)
+
+
+class TestGravityTorque:
+    LENGTHS = np.array([0.4, 0.3])
+    MASSES = np.array([2.0, 1.0])
+    COM = np.array([0.2, 0.15])
+
+    def energy(self, q, lengths, masses, com, g=9.81):
+        absolute = np.cumsum(np.asarray(q, dtype=np.float64))
+        total = 0.0
+        for i in range(len(q)):
+            height = com[i] * np.sin(absolute[i])
+            for j in range(i):
+                height += lengths[j] * np.sin(absolute[j])
+            total += masses[i] * height
+        return g * total
+
+    def numeric(self, q, lengths, masses, com, g=9.81, h=1e-6):
+        q = np.asarray(q, dtype=np.float64)
+        out = np.zeros(len(q))
+        for k in range(len(q)):
+            d = np.zeros(len(q))
+            d[k] = h
+            out[k] = (
+                self.energy(q + d, lengths, masses, com, g) - self.energy(q - d, lengths, masses, com, g)
+            ) / (2 * h)
+        return out
+
+    def test_hanging_straight_down_needs_no_torque(self):
+        out = m.gravity_torque([-np.pi / 2, 0.0], self.LENGTHS, self.MASSES, self.COM)
+        assert out.shape == (2,)
+        assert np.allclose(out, 0.0, atol=1e-9)
+
+    def test_single_link_held_horizontally(self):
+        # one link, mass 2 kg, centre of mass 0.2 m out
+        out = m.gravity_torque([0.0], [0.4], [2.0], [0.2])
+        assert np.isclose(out[0], 9.81 * 2.0 * 0.2)
+
+    def test_single_link_at_an_angle(self):
+        for angle in (0.3, 1.0, -0.7, 2.5):
+            out = m.gravity_torque([angle], [0.4], [2.0], [0.2])
+            assert np.isclose(out[0], 9.81 * 2.0 * 0.2 * np.cos(angle))
+
+    def test_two_links_stretched_out(self):
+        out = m.gravity_torque([0.0, 0.0], self.LENGTHS, self.MASSES, self.COM)
+        # shoulder carries link 0 at 0.2 m and link 1 at 0.4 + 0.15 m
+        assert np.isclose(out[0], 9.81 * (2.0 * 0.2 + 1.0 * 0.55))
+        assert np.isclose(out[1], 9.81 * 1.0 * 0.15)
+
+    def test_matches_the_gradient_of_the_potential_energy(self):
+        for n in (1, 2, 3, 4):
+            lengths = RNG.uniform(0.1, 0.5, size=n)
+            masses = RNG.uniform(0.2, 3.0, size=n)
+            com = lengths * RNG.uniform(0.2, 0.8, size=n)
+            for _ in range(5):
+                q = RNG.uniform(-np.pi, np.pi, size=n)
+                out = m.gravity_torque(q, lengths, masses, com)
+                assert out.shape == (n,)
+                assert np.allclose(out, self.numeric(q, lengths, masses, com), atol=1e-5)
+
+    def test_gravity_is_a_parameter(self):
+        q = [0.4, -0.2]
+        earth = m.gravity_torque(q, self.LENGTHS, self.MASSES, self.COM)
+        moon = m.gravity_torque(q, self.LENGTHS, self.MASSES, self.COM, g=1.62)
+        assert np.allclose(moon, earth * 1.62 / 9.81)
+
+    def test_the_last_joint_only_carries_the_last_link(self):
+        q = RNG.uniform(-2.0, 2.0, size=3)
+        lengths = np.array([0.3, 0.2, 0.25])
+        masses = np.array([1.0, 2.0, 0.5])
+        com = np.array([0.15, 0.1, 0.1])
+        out = m.gravity_torque(q, lengths, masses, com)
+        assert np.isclose(out[-1], 9.81 * masses[-1] * com[-1] * np.cos(q.sum()))

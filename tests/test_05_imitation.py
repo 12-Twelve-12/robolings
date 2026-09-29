@@ -165,3 +165,131 @@ class TestDeltaActions:
         m.from_delta(m.to_delta(chunk, state, [False, True]), state, [False, True])
         assert np.array_equal(chunk, self.CHUNK)
         assert np.array_equal(state, self.STATE)
+
+
+class TestDctTokens:
+    def test_matrix_is_orthonormal(self):
+        for n in (1, 2, 4, 8, 16):
+            C = m.dct_matrix(n)
+            assert C.shape == (n, n)
+            assert np.allclose(C @ C.T, np.eye(n), atol=1e-12)
+
+    def test_first_row_is_constant(self):
+        n = 8
+        C = m.dct_matrix(n)
+        assert np.allclose(C[0], np.sqrt(1.0 / n))
+
+    def test_constant_signal_has_only_a_dc_coefficient(self):
+        chunk = np.tile([2.0, -1.0], (16, 1))
+        coefficients = m.dct_matrix(16) @ chunk
+        assert not np.allclose(coefficients[0], 0.0)
+        assert np.allclose(coefficients[1:], 0.0, atol=1e-12)
+
+    def test_transform_preserves_energy(self):
+        chunk = RNG.normal(size=(12, 3))
+        coefficients = m.dct_matrix(12) @ chunk
+        assert np.isclose(np.sum(chunk**2), np.sum(coefficients**2))
+
+    def test_tokens_are_integers(self):
+        tokens = m.tokenize(RNG.normal(size=(8, 4)), 0.05)
+        assert tokens.shape == (8, 4)
+        assert np.issubdtype(np.asarray(tokens).dtype, np.integer)
+
+    def test_rounds_to_nearest_rather_than_towards_zero(self):
+        # a constant chunk of 0.8 over 4 steps has a single coefficient of 1.6,
+        # which rounds to 2 and truncates to 1
+        for sign in (1.0, -1.0):
+            tokens = m.tokenize(np.full((4, 1), sign * 0.8), 1.0)
+            assert tokens[0, 0] == sign * 2
+            assert np.all(tokens[1:] == 0)
+
+    def test_every_coefficient_moves_by_at_most_half_a_step(self):
+        step = 0.05
+        chunk = RNG.normal(size=(16, 3))
+        error = m.dct_matrix(16) @ chunk - m.tokenize(chunk, step) * step
+        assert np.abs(error).max() <= step / 2 + 1e-12
+
+    def test_round_trip_is_within_the_quantisation_step(self):
+        for step in (0.5, 0.05, 0.005):
+            chunk = RNG.normal(size=(16, 5))
+            back = m.detokenize(m.tokenize(chunk, step), step)
+            assert back.shape == chunk.shape
+            # each coefficient moves by at most half a step, and the transform
+            # is orthonormal, so the error in the chunk is bounded too
+            assert np.abs(back - chunk).max() <= step * np.sqrt(chunk.shape[0])
+
+    def test_a_smaller_step_is_more_accurate(self):
+        chunk = np.cumsum(RNG.normal(size=(16, 2)) * 0.1, axis=0)
+        coarse = np.abs(m.detokenize(m.tokenize(chunk, 0.5), 0.5) - chunk).max()
+        fine = np.abs(m.detokenize(m.tokenize(chunk, 0.001), 0.001) - chunk).max()
+        assert fine < coarse
+
+    def test_a_smooth_chunk_is_mostly_zeros(self):
+        t = np.linspace(0.0, 1.0, 32)[:, None]
+        chunk = np.hstack([t, t**2])
+        tokens = m.tokenize(chunk, 0.05)
+        assert np.count_nonzero(tokens) < tokens.size // 2
+
+    def test_detokenize_undoes_the_scaling(self):
+        tokens = np.array([[2, -1], [0, 3]])
+        back = m.detokenize(tokens, 0.25)
+        assert np.allclose(back, m.dct_matrix(2).T @ (tokens * 0.25))
+
+
+class TestEmaWeights:
+    def test_decay_warms_up(self):
+        assert np.isclose(m.ema_decay(0), 1.0 / 10.0)
+        assert np.isclose(m.ema_decay(10), 11.0 / 20.0)
+        assert np.isclose(m.ema_decay(90), 91.0 / 100.0)
+
+    def test_decay_is_capped(self):
+        assert m.ema_decay(10**9) == 0.9999
+        assert m.ema_decay(10**9, max_decay=0.5) == 0.5
+
+    def test_decay_rises_with_the_step(self):
+        values = [m.ema_decay(s) for s in range(0, 500, 10)]
+        assert all(b >= a for a, b in zip(values, values[1:], strict=False))
+        assert type(values[0]) is float
+
+    def test_warmup_is_a_parameter(self):
+        assert np.isclose(m.ema_decay(0, warmup=100.0), 1.0 / 100.0)
+        assert m.ema_decay(0, warmup=100.0) < m.ema_decay(0, warmup=10.0)
+
+    def test_update_moves_towards_the_weights(self):
+        average = {"w": np.zeros(3), "b": np.zeros(2)}
+        weights = {"w": np.ones(3), "b": np.full(2, 4.0)}
+        out = m.ema_update(average, weights, 0)
+        decay = m.ema_decay(0)
+        assert np.allclose(out["w"], (1.0 - decay) * np.ones(3))
+        assert np.allclose(out["b"], (1.0 - decay) * np.full(2, 4.0))
+
+    def test_update_does_not_modify_its_inputs(self):
+        average = {"w": np.zeros(3)}
+        weights = {"w": np.ones(3)}
+        m.ema_update(average, weights, 5)
+        assert np.allclose(average["w"], 0.0)
+        assert np.allclose(weights["w"], 1.0)
+
+    def test_update_returns_new_arrays(self):
+        average = {"w": np.zeros(3)}
+        out = m.ema_update(average, {"w": np.ones(3)}, 5)
+        assert out["w"] is not average["w"]
+        assert sorted(out) == ["w"]
+
+    def test_constant_weights_are_approached(self):
+        average = {"w": np.zeros(2)}
+        weights = {"w": np.array([1.0, -2.0])}
+        for step in range(3000):
+            average = m.ema_update(average, weights, step)
+        assert np.allclose(average["w"], weights["w"], atol=1e-2)
+
+    def test_the_ramp_is_the_whole_point(self):
+        # the same 50 steps at a constant decay of 0.9999 barely move at all
+        average = {"w": np.zeros(1)}
+        weights = {"w": np.ones(1)}
+        constant = 0.0
+        for step in range(50):
+            average = m.ema_update(average, weights, step)
+            constant = 0.9999 * constant + 0.0001 * 1.0
+        assert constant < 0.01
+        assert average["w"][0] > 100 * constant
