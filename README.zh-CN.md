@@ -13,23 +13,27 @@
 ```bash
 pip install -r requirements.txt
 python robolings.py           # 看进度和下一题
-python robolings.py run 7     # 只测某一题
+python robolings.py run slerp # 只测某一题
 python robolings.py list
+python robolings.py --zh      # 题目名显示中文
 ```
 
-题目在 `exercises/` 里，把 `raise NotImplementedError` 换成你的实现，再跑一次就行。需要 Python 3.10 以上。
+题目在 `exercises/` 里，一题一个文件。把 `raise NotImplementedError` 换成你的实现，再跑一次就行。需要 Python 3.10 以上。
 
 ```text
 robolings  [#######.......................]  6/25
 
-  [x] 01  Rodrigues' rotation formula  [t01_rotations.py: rodrigues()]
-  [x] 02  Quaternion product  [t01_rotations.py: quat_mul()]
-  ...
-  [ ] 07  Forward kinematics of a serial chain  [t02_kinematics.py: forward_kinematics()]
+  01_rotations
+   [x]  1  rodrigues              Rodrigues' rotation formula
+   [x]  2  quat_mul               Quaternion product
+   ...
+  02_kinematics
+   [x]  6  transform_inverse      Inverse of a homogeneous transform
+   [ ]  7  forward_kinematics     Forward kinematics of a serial chain
 
-Next: exercise 07, Forward kinematics of a serial chain
-  edit   exercises/t02_kinematics.py
-  check  python robolings.py run 07
+Next: forward_kinematics
+  edit   exercises/02_kinematics/forward_kinematics.py
+  check  python robolings.py run forward_kinematics
 ```
 
 卡住了可以看 `solutions/` 里的参考解。
@@ -38,17 +42,21 @@ Next: exercise 07, Forward kinematics of a serial chain
 
 每次往你的 fork 推送，都会自动跑一遍测试，并在该次运行的摘要页生成进度表。fork 出来的仓库默认关闭 Actions，需要先到 Actions 页签手动开启一次。
 
+### 获取新题
+
+在 GitHub 上点 **Sync fork**，或者合并 `upstream/main`。新题都是新增文件，不会动到你已经写好的答案。
+
 ## 题目
 
-| 专题 | 题号 | 内容 |
+| 专题 | 题数 | 内容 |
 |---|---|---|
-| 旋转 | 01–05 | 罗德里格斯公式、四元数乘法、四元数与矩阵互转、球面插值 |
-| 运动学 | 06–09 | 齐次变换求逆、正运动学、几何雅可比、阻尼最小二乘 |
-| 灵巧手 | 10–12 | 耦合关节、重定向代价、带限位的指尖逆解 |
-| 控制 | 13–16 | 最小 jerk 轨迹、低通滤波、MIT 模式阻抗控制、指令限速 |
-| 模仿学习 | 17–20 | 归一化、动作分块、时间集成、观测历史 |
-| 扩散策略 | 21–23 | 余弦调度、前向加噪、DDIM 单步 |
-| 流匹配 | 24–25 | 训练目标、欧拉采样 |
+| 旋转 | 5 | 罗德里格斯公式、四元数乘法、四元数与矩阵互转、球面插值 |
+| 运动学 | 4 | 齐次变换求逆、正运动学、几何雅可比、阻尼最小二乘 |
+| 灵巧手 | 3 | 耦合关节、重定向代价、带限位的指尖逆解 |
+| 控制 | 4 | 最小 jerk 轨迹、低通滤波、MIT 模式阻抗控制、指令限速 |
+| 模仿学习 | 4 | 归一化、动作分块、时间集成、观测历史 |
+| 扩散策略 | 3 | 余弦调度、前向加噪、DDIM 单步 |
+| 流匹配 | 2 | 训练目标、欧拉采样 |
 
 ## 说明
 

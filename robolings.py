@@ -1,9 +1,11 @@
 """robolings - small exercises for robot learning.
 
-    python robolings.py              show progress and the next exercise
-    python robolings.py run 07       run the tests of exercise 07
-    python robolings.py list         list every exercise
-    python robolings.py --markdown   progress as Markdown, for CI summaries
+    python robolings.py               show progress and the next exercise
+    python robolings.py run slerp     run the tests of one exercise
+    python robolings.py run 5         same, by position in the list
+    python robolings.py list          list every exercise
+    python robolings.py --zh          titles in Chinese
+    python robolings.py --markdown    progress as Markdown, for CI summaries
 
 Maintainers:
 
@@ -59,7 +61,7 @@ def run_all(target):
 
 
 def grade(registry, outcomes):
-    """Status per exercise: 'done', 'todo' or 'untested'."""
+    """Status per exercise name: 'done', 'todo' or 'untested'."""
     known = {entry["test"] for entry in registry}
     unknown = sorted(set(outcomes) - known)
     if unknown:
@@ -68,60 +70,75 @@ def grade(registry, outcomes):
     for entry in registry:
         results = outcomes.get(entry["test"], [])
         if not results:
-            status[entry["id"]] = "untested"
+            status[entry["name"]] = "untested"
         elif all(r == "passed" for r in results):
-            status[entry["id"]] = "done"
+            status[entry["name"]] = "done"
         else:
-            status[entry["id"]] = "todo"
+            status[entry["name"]] = "todo"
     return status
 
 
-def describe(entry):
-    functions = ", ".join(f"{name}()" for name in entry["functions"])
-    return f"{entry['id']}  {entry['title']}  [{entry['module']}.py: {functions}]"
+def file_of(entry, target):
+    return f"{target}/{entry['track']}/{entry['name']}.py"
 
 
-def print_progress(registry, status, target):
+def title_of(entry, zh):
+    return entry["title_zh"] if zh else entry["title"]
+
+
+def print_progress(registry, status, target, zh):
     done = sum(1 for s in status.values() if s == "done")
     total = len(registry)
     width = 30
     filled = round(width * done / total)
     print(f"robolings  [{'#' * filled}{'.' * (width - filled)}]  {done}/{total}")
+    track = None
+    for number, entry in enumerate(registry, start=1):
+        if entry["track"] != track:
+            track = entry["track"]
+            print(f"\n  {track}")
+        mark = {"done": "x", "todo": " ", "untested": "?"}[status[entry["name"]]]
+        print(f"   [{mark}] {number:2d}  {entry['name']:<22} {title_of(entry, zh)}")
     print()
-    for entry in registry:
-        mark = {"done": "x", "todo": " ", "untested": "?"}[status[entry["id"]]]
-        print(f"  [{mark}] {describe(entry)}")
-    print()
-    nxt = next((e for e in registry if status[e["id"]] != "done"), None)
+    nxt = next((e for e in registry if status[e["name"]] != "done"), None)
     if nxt is None:
         print("All exercises pass. Well done.")
         return
-    print(f"Next: exercise {nxt['id']}, {nxt['title']}")
-    print(f"  edit   {target}/{nxt['module']}.py")
-    print(f"  check  python robolings.py run {nxt['id']}")
+    print(f"Next: {nxt['name']}")
+    print(f"  edit   {file_of(nxt, target)}")
+    print(f"  check  python robolings.py run {nxt['name']}")
 
 
-def print_markdown(registry, status):
+def print_markdown(registry, status, zh):
     done = sum(1 for s in status.values() if s == "done")
     print(f"## robolings progress: {done}/{len(registry)}")
     print()
-    print("| | Exercise | File |")
-    print("|---|---|---|")
+    print("| | Exercise | | File |")
+    print("|---|---|---|---|")
     for entry in registry:
-        mark = {"done": "✅", "todo": "⬜", "untested": "❓"}[status[entry["id"]]]
-        print(f"| {mark} | {entry['id']} {entry['title']} | `{entry['module']}.py` |")
+        mark = {"done": "✅", "todo": "⬜", "untested": "❓"}[status[entry["name"]]]
+        print(f"| {mark} | `{entry['name']}` | {title_of(entry, zh)} | `{file_of(entry, 'exercises')}` |")
 
 
-def run_one(registry, exercise_id, target):
+def find(registry, key):
+    if key.isdigit():
+        position = int(key)
+        if 1 <= position <= len(registry):
+            return registry[position - 1]
+        raise SystemExit(f"there are {len(registry)} exercises, got {key}")
+    for entry in registry:
+        if entry["name"] == key:
+            return entry
+    raise SystemExit(f"no exercise named {key!r}; see 'python robolings.py list'")
+
+
+def run_one(registry, key, target):
     import pytest
 
-    wanted = exercise_id.zfill(2)
-    entry = next((e for e in registry if e["id"] == wanted), None)
-    if entry is None:
-        raise SystemExit(f"no exercise {exercise_id!r}; see 'python robolings.py list'")
+    entry = find(registry, key)
     os.environ["ROBOLINGS_TARGET"] = target
-    print(describe(entry))
-    node = f"{ROOT / 'tests' / ('test_' + entry['module'] + '.py')}::{entry['test']}"
+    print(f"{entry['name']}  ({file_of(entry, target)})")
+    node = f"{ROOT / 'tests' / ('test_' + entry['track'] + '.py')}::{entry['test']}"
     return int(pytest.main(["-q", "--tb=short", "-p", "no:cacheprovider", node]))
 
 
@@ -130,6 +147,7 @@ def main():
     parser.add_argument("command", nargs="?", default="progress", choices=["progress", "run", "list"])
     parser.add_argument("exercise", nargs="?")
     parser.add_argument("--target", default="exercises", choices=["exercises", "solutions"])
+    parser.add_argument("--zh", action="store_true", help="titles in Chinese")
     parser.add_argument("--markdown", action="store_true")
     parser.add_argument("--expect", choices=["all-pass", "all-fail"])
     args = parser.parse_args()
@@ -140,24 +158,25 @@ def main():
     registry = load_registry()
 
     if args.command == "list":
-        for entry in registry:
-            print(describe(entry))
+        for number, entry in enumerate(registry, start=1):
+            title = title_of(entry, args.zh)
+            print(f"{number:2d}  {entry['name']:<22} {title:<45} {file_of(entry, args.target)}")
         return 0
 
     if args.command == "run":
         if not args.exercise:
-            raise SystemExit("usage: python robolings.py run <id>")
+            raise SystemExit("usage: python robolings.py run <name>")
         return run_one(registry, args.exercise, args.target)
 
     status = grade(registry, run_all(args.target))
     if args.markdown:
-        print_markdown(registry, status)
+        print_markdown(registry, status, args.zh)
     else:
-        print_progress(registry, status, args.target)
+        print_progress(registry, status, args.target, args.zh)
 
     if args.expect:
         wanted = "done" if args.expect == "all-pass" else "todo"
-        wrong = [entry["id"] for entry in registry if status[entry["id"]] != wanted]
+        wrong = [entry["name"] for entry in registry if status[entry["name"]] != wanted]
         if wrong:
             print(f"\nexpected {args.expect} in {args.target}/, but these differ: {', '.join(wrong)}")
             return 1

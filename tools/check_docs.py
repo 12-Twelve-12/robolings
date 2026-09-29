@@ -1,6 +1,9 @@
 """Check that both READMEs agree with exercises.json.
 
-python tools/check_docs.py
+The intro states the number of exercises, and the table has one row per
+track with the number of exercises in it.
+
+    python tools/check_docs.py
 """
 
 import json
@@ -19,11 +22,10 @@ READMES = {
 
 def main():
     registry = json.loads((ROOT / "exercises.json").read_text(encoding="utf-8"))
-    ids = [entry["id"] for entry in registry]
-    expected = [f"{n:02d}" for n in range(1, len(ids) + 1)]
-    if ids != expected:
-        print(f"exercises.json: ids must be 01..{len(ids):02d} in order, got {ids}")
-        return 1
+    per_track = {}
+    for entry in registry:
+        per_track[entry["track"]] = per_track.get(entry["track"], 0) + 1
+    expected = list(per_track.values())
 
     problems = []
     for name, pattern in READMES.items():
@@ -32,21 +34,17 @@ def main():
         stated = re.search(pattern, text, flags=re.MULTILINE)
         if stated is None:
             problems.append(f"{name}: cannot find the sentence that states the number of exercises")
-        elif int(stated.group(1)) != len(ids):
-            problems.append(f"{name}: says {stated.group(1)} exercises, exercises.json has {len(ids)}")
+        elif int(stated.group(1)) != len(registry):
+            problems.append(f"{name}: says {stated.group(1)} exercises, exercises.json has {len(registry)}")
 
-        listed = []
-        for first, last in re.findall(r"\| (\d\d)–(\d\d) \|", text):
-            listed += [f"{n:02d}" for n in range(int(first), int(last) + 1)]
-        if listed != ids:
-            missing = sorted(set(ids) - set(listed))
-            extra = sorted(set(listed) - set(ids))
-            problems.append(f"{name}: table is off (missing {missing}, extra {extra})")
+        listed = [int(n) for n in re.findall(r"^\| [^|]+ \| (\d+) \| ", text, flags=re.MULTILINE)]
+        if listed != expected:
+            problems.append(f"{name}: table has {listed} exercises per track, exercises.json has {expected}")
 
     for problem in problems:
         print(problem)
     if not problems:
-        print(f"READMEs agree with exercises.json ({len(ids)} exercises)")
+        print(f"READMEs agree with exercises.json ({len(registry)} exercises in {len(expected)} tracks)")
     return 1 if problems else 0
 
 

@@ -13,23 +13,26 @@ Fork the repo and clone your fork, then:
 ```bash
 pip install -r requirements.txt
 python robolings.py           # progress, and what to do next
-python robolings.py run 7     # test a single exercise
+python robolings.py run slerp # test a single exercise
 python robolings.py list
 ```
 
-The stubs are in `exercises/`. Replace the `raise NotImplementedError` and run the exercise again. Python 3.10+.
+The stubs are in `exercises/`, one file per exercise. Replace the `raise NotImplementedError` and run the exercise again. Python 3.10+.
 
 ```text
 robolings  [#######.......................]  6/25
 
-  [x] 01  Rodrigues' rotation formula  [t01_rotations.py: rodrigues()]
-  [x] 02  Quaternion product  [t01_rotations.py: quat_mul()]
-  ...
-  [ ] 07  Forward kinematics of a serial chain  [t02_kinematics.py: forward_kinematics()]
+  01_rotations
+   [x]  1  rodrigues              Rodrigues' rotation formula
+   [x]  2  quat_mul               Quaternion product
+   ...
+  02_kinematics
+   [x]  6  transform_inverse      Inverse of a homogeneous transform
+   [ ]  7  forward_kinematics     Forward kinematics of a serial chain
 
-Next: exercise 07, Forward kinematics of a serial chain
-  edit   exercises/t02_kinematics.py
-  check  python robolings.py run 07
+Next: forward_kinematics
+  edit   exercises/02_kinematics/forward_kinematics.py
+  check  python robolings.py run forward_kinematics
 ```
 
 Answers are in `solutions/` if you get stuck.
@@ -38,17 +41,21 @@ Answers are in `solutions/` if you get stuck.
 
 Each push to your fork runs the tests and puts a progress table in the summary of the workflow run. Forks have Actions disabled by default, so enable them once in the Actions tab.
 
+### Getting new exercises
+
+Use **Sync fork** on GitHub, or merge `upstream/main`. New exercises arrive as new files, so your own answers are not touched.
+
 ## Exercises
 
-| Track | No. | Content |
+| Track | Exercises | Content |
 |---|---|---|
-| Rotations | 01–05 | Rodrigues, quaternion product, quaternion ↔ matrix, slerp |
-| Kinematics | 06–09 | transform inverse, FK, geometric Jacobian, damped least squares |
-| Dexterous hands | 10–12 | mimic joints, retargeting cost, fingertip IK with joint limits |
-| Control | 13–16 | min-jerk, low-pass filter, MIT-mode impedance control, rate limiter |
-| Imitation learning | 17–20 | normalisation, action chunking, temporal ensembling, obs history |
-| Diffusion policy | 21–23 | cosine schedule, forward process, DDIM step |
-| Flow matching | 24–25 | training target, Euler sampler |
+| Rotations | 5 | Rodrigues, quaternion product, quaternion ↔ matrix, slerp |
+| Kinematics | 4 | transform inverse, FK, geometric Jacobian, damped least squares |
+| Dexterous hands | 3 | mimic joints, retargeting cost, fingertip IK with joint limits |
+| Control | 4 | min-jerk, low-pass filter, MIT-mode impedance control, rate limiter |
+| Imitation learning | 4 | normalisation, action chunking, temporal ensembling, obs history |
+| Diffusion policy | 3 | cosine schedule, forward process, DDIM step |
+| Flow matching | 2 | training target, Euler sampler |
 
 ## Notes
 

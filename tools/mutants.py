@@ -17,10 +17,10 @@ import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
-# (exercise id, function, what is wrong, replacement source)
+# (exercise, function, what is wrong, replacement source)
 MUTANTS = [
     (
-        "01",
+        "rodrigues",
         "rodrigues",
         "axis is not normalised",
         """
@@ -31,7 +31,7 @@ def rodrigues(axis, angle):
 """,
     ),
     (
-        "01",
+        "rodrigues",
         "rodrigues",
         "rotates the wrong way",
         """
@@ -43,7 +43,7 @@ def rodrigues(axis, angle):
 """,
     ),
     (
-        "02",
+        "quat_mul",
         "quat_mul",
         "operands swapped",
         """
@@ -59,7 +59,7 @@ def quat_mul(q1, q2):
 """,
     ),
     (
-        "02",
+        "quat_mul",
         "quat_mul",
         "result is normalised",
         """
@@ -76,7 +76,7 @@ def quat_mul(q1, q2):
 """,
     ),
     (
-        "03",
+        "quat_to_matrix",
         "quat_to_matrix",
         "transposed",
         """
@@ -91,7 +91,7 @@ def quat_to_matrix(q):
 """,
     ),
     (
-        "03",
+        "quat_to_matrix",
         "quat_to_matrix",
         "input is not normalised",
         """
@@ -105,7 +105,7 @@ def quat_to_matrix(q):
 """,
     ),
     (
-        "04",
+        "matrix_to_quat",
         "matrix_to_quat",
         "divides by w",
         """
@@ -122,7 +122,7 @@ def matrix_to_quat(R):
 """,
     ),
     (
-        "04",
+        "matrix_to_quat",
         "matrix_to_quat",
         "w may be negative",
         """
@@ -145,7 +145,7 @@ def matrix_to_quat(R):
 """,
     ),
     (
-        "05",
+        "slerp",
         "slerp",
         "takes the long way round",
         """
@@ -162,7 +162,7 @@ def slerp(q0, q1, t):
 """,
     ),
     (
-        "05",
+        "slerp",
         "slerp",
         "no fallback for nearly equal inputs",
         """
@@ -179,7 +179,7 @@ def slerp(q0, q1, t):
 """,
     ),
     (
-        "05",
+        "slerp",
         "slerp",
         "plain linear interpolation",
         """
@@ -193,7 +193,7 @@ def slerp(q0, q1, t):
 """,
     ),
     (
-        "06",
+        "transform_inverse",
         "transform_inverse",
         "general matrix inverse",
         """
@@ -202,7 +202,7 @@ def transform_inverse(T):
 """,
     ),
     (
-        "06",
+        "transform_inverse",
         "transform_inverse",
         "translation is only negated",
         """
@@ -215,7 +215,7 @@ def transform_inverse(T):
 """,
     ),
     (
-        "07",
+        "forward_kinematics",
         "forward_kinematics",
         "joint rotation applied before the origin",
         """
@@ -237,7 +237,7 @@ def forward_kinematics(origins, axes, q):
 """,
     ),
     (
-        "07",
+        "forward_kinematics",
         "forward_kinematics",
         "returns only the last frame",
         """
@@ -257,7 +257,7 @@ def forward_kinematics(origins, axes, q):
 """,
     ),
     (
-        "08",
+        "geometric_jacobian",
         "geometric_jacobian",
         "tip offset ignored",
         """
@@ -275,7 +275,7 @@ def geometric_jacobian(frames, axes, tip_offset):
 """,
     ),
     (
-        "08",
+        "geometric_jacobian",
         "geometric_jacobian",
         "cross product reversed",
         """
@@ -293,7 +293,7 @@ def geometric_jacobian(frames, axes, tip_offset):
 """,
     ),
     (
-        "08",
+        "geometric_jacobian",
         "geometric_jacobian",
         "axis left in the joint frame",
         """
@@ -311,7 +311,7 @@ def geometric_jacobian(frames, axes, tip_offset):
 """,
     ),
     (
-        "08",
+        "geometric_jacobian",
         "geometric_jacobian",
         "angular rows on top",
         """
@@ -329,7 +329,7 @@ def geometric_jacobian(frames, axes, tip_offset):
 """,
     ),
     (
-        "09",
+        "dls_ik_step",
         "dls_ik_step",
         "damping is not squared",
         """
@@ -340,7 +340,7 @@ def dls_ik_step(J, err, damping):
 """,
     ),
     (
-        "09",
+        "dls_ik_step",
         "dls_ik_step",
         "damping ignored",
         """
@@ -349,7 +349,7 @@ def dls_ik_step(J, err, damping):
 """,
     ),
     (
-        "10",
+        "expand_mimic",
         "expand_mimic",
         "offset ignored",
         """
@@ -362,7 +362,7 @@ def expand_mimic(q_active, n_joints, active_idx, mimic):
 """,
     ),
     (
-        "10",
+        "expand_mimic",
         "expand_mimic",
         "source indexes the active vector",
         """
@@ -375,7 +375,7 @@ def expand_mimic(q_active, n_joints, active_idx, mimic):
 """,
     ),
     (
-        "11",
+        "retarget_cost",
         "retarget_cost",
         "factor of one half missing",
         """
@@ -385,7 +385,7 @@ def retarget_cost(human_vecs, robot_vecs, scale, q, q_prev, beta):
 """,
     ),
     (
-        "11",
+        "retarget_cost",
         "retarget_cost",
         "scale applied to the robot",
         """
@@ -395,7 +395,7 @@ def retarget_cost(human_vecs, robot_vecs, scale, q, q_prev, beta):
 """,
     ),
     (
-        "11",
+        "retarget_cost",
         "retarget_cost",
         "returns a numpy scalar",
         """
@@ -405,7 +405,7 @@ def retarget_cost(human_vecs, robot_vecs, scale, q, q_prev, beta):
 """,
     ),
     (
-        "12",
+        "fingertip_ik",
         "fingertip_ik",
         "limits applied only at the end",
         """
@@ -418,7 +418,7 @@ def fingertip_ik(fk_fn, jac_fn, q0, target, lower, upper, iters, damping):
 """,
     ),
     (
-        "12",
+        "fingertip_ik",
         "fingertip_ik",
         "limits ignored",
         """
@@ -431,7 +431,7 @@ def fingertip_ik(fk_fn, jac_fn, q0, target, lower, upper, iters, damping):
 """,
     ),
     (
-        "12",
+        "fingertip_ik",
         "fingertip_ik",
         "q0 modified in place",
         """
@@ -445,7 +445,7 @@ def fingertip_ik(fk_fn, jac_fn, q0, target, lower, upper, iters, damping):
 """,
     ),
     (
-        "13",
+        "min_jerk",
         "min_jerk",
         "chain rule forgotten",
         """
@@ -460,7 +460,7 @@ def min_jerk(q0, q1, duration, t):
 """,
     ),
     (
-        "13",
+        "min_jerk",
         "min_jerk",
         "time is not clamped",
         """
@@ -475,7 +475,7 @@ def min_jerk(q0, q1, duration, t):
 """,
     ),
     (
-        "13",
+        "min_jerk",
         "min_jerk",
         "cubic instead of quintic",
         """
@@ -490,7 +490,7 @@ def min_jerk(q0, q1, duration, t):
 """,
     ),
     (
-        "14",
+        "lowpass_filter",
         "lowpass_filter",
         "starts from zero",
         """
@@ -506,7 +506,7 @@ def lowpass_filter(x, cutoff_hz, dt):
 """,
     ),
     (
-        "14",
+        "lowpass_filter",
         "lowpass_filter",
         "alpha = dt / rc",
         """
@@ -521,7 +521,7 @@ def lowpass_filter(x, cutoff_hz, dt):
 """,
     ),
     (
-        "14",
+        "lowpass_filter",
         "lowpass_filter",
         "filters in place",
         """
@@ -533,7 +533,7 @@ def lowpass_filter(x, cutoff_hz, dt):
 """,
     ),
     (
-        "15",
+        "mit_torque",
         "mit_torque",
         "each term clipped separately",
         """
@@ -545,7 +545,7 @@ def mit_torque(kp, kd, q_des, dq_des, q, dq, tau_ff, tau_limit):
 """,
     ),
     (
-        "15",
+        "mit_torque",
         "mit_torque",
         "no limit",
         """
@@ -554,7 +554,7 @@ def mit_torque(kp, kd, q_des, dq_des, q, dq, tau_ff, tau_limit):
 """,
     ),
     (
-        "15",
+        "mit_torque",
         "mit_torque",
         "damping sign reversed",
         """
@@ -564,7 +564,7 @@ def mit_torque(kp, kd, q_des, dq_des, q, dq, tau_ff, tau_limit):
 """,
     ),
     (
-        "16",
+        "rate_limit",
         "rate_limit",
         "clips the target instead of the change",
         """
@@ -574,7 +574,7 @@ def rate_limit(target, prev, max_rate, dt):
 """,
     ),
     (
-        "16",
+        "rate_limit",
         "rate_limit",
         "dt ignored",
         """
@@ -586,7 +586,7 @@ def rate_limit(target, prev, max_rate, dt):
 """,
     ),
     (
-        "17",
+        "minmax",
         "minmax_normalize",
         "constant dimension gives nan",
         """
@@ -597,7 +597,7 @@ def minmax_normalize(x, lo, hi):
 """,
     ),
     (
-        "17",
+        "minmax",
         "minmax_normalize",
         "maps to [0, 1]",
         """
@@ -608,7 +608,7 @@ def minmax_normalize(x, lo, hi):
 """,
     ),
     (
-        "17",
+        "minmax",
         "minmax_unnormalize",
         "inverse of a [0, 1] mapping",
         """
@@ -618,7 +618,7 @@ def minmax_unnormalize(y, lo, hi):
 """,
     ),
     (
-        "18",
+        "action_chunks",
         "make_action_chunks",
         "pads with zeros",
         """
@@ -633,7 +633,7 @@ def make_action_chunks(actions, horizon):
 """,
     ),
     (
-        "18",
+        "action_chunks",
         "make_action_chunks",
         "mask inverted",
         """
@@ -645,7 +645,7 @@ def make_action_chunks(actions, horizon):
 """,
     ),
     (
-        "18",
+        "action_chunks",
         "make_action_chunks",
         "drops the incomplete chunks",
         """
@@ -657,7 +657,7 @@ def make_action_chunks(actions, horizon):
 """,
     ),
     (
-        "19",
+        "temporal_ensemble",
         "temporal_ensemble",
         "newest prediction weighs most",
         """
@@ -668,7 +668,7 @@ def temporal_ensemble(preds, m):
 """,
     ),
     (
-        "19",
+        "temporal_ensemble",
         "temporal_ensemble",
         "weights are not normalised",
         """
@@ -679,7 +679,7 @@ def temporal_ensemble(preds, m):
 """,
     ),
     (
-        "20",
+        "obs_history",
         "stack_obs_history",
         "pads with zeros",
         """
@@ -693,7 +693,7 @@ def stack_obs_history(obs, n):
 """,
     ),
     (
-        "20",
+        "obs_history",
         "stack_obs_history",
         "newest observation first",
         """
@@ -705,7 +705,7 @@ def stack_obs_history(obs, n):
 """,
     ),
     (
-        "21",
+        "cosine_schedule",
         "cosine_schedule",
         "beta is not capped",
         """
@@ -718,7 +718,7 @@ def cosine_schedule(num_steps, s=0.008, max_beta=0.999):
 """,
     ),
     (
-        "21",
+        "cosine_schedule",
         "cosine_schedule",
         "offset s ignored",
         """
@@ -731,7 +731,7 @@ def cosine_schedule(num_steps, s=0.008, max_beta=0.999):
 """,
     ),
     (
-        "21",
+        "cosine_schedule",
         "cosine_schedule",
         "linear schedule",
         """
@@ -741,7 +741,7 @@ def cosine_schedule(num_steps, s=0.008, max_beta=0.999):
 """,
     ),
     (
-        "21",
+        "cosine_schedule",
         "cosine_schedule",
         "returns alpha_bar of the cosine directly",
         """
@@ -754,7 +754,7 @@ def cosine_schedule(num_steps, s=0.008, max_beta=0.999):
 """,
     ),
     (
-        "22",
+        "q_sample",
         "q_sample",
         "square roots missing",
         """
@@ -765,7 +765,7 @@ def q_sample(x0, t, noise, alphas_cumprod):
 """,
     ),
     (
-        "22",
+        "q_sample",
         "q_sample",
         "first timestep used for the whole batch",
         """
@@ -775,7 +775,7 @@ def q_sample(x0, t, noise, alphas_cumprod):
 """,
     ),
     (
-        "23",
+        "ddim_step",
         "ddim_step",
         "t_prev = -1 wraps to the last timestep",
         """
@@ -787,7 +787,7 @@ def ddim_step(x_t, eps_pred, t, t_prev, alphas_cumprod):
 """,
     ),
     (
-        "23",
+        "ddim_step",
         "ddim_step",
         "always steps to t - 1",
         """
@@ -799,7 +799,7 @@ def ddim_step(x_t, eps_pred, t, t_prev, alphas_cumprod):
 """,
     ),
     (
-        "23",
+        "ddim_step",
         "ddim_step",
         "returns the predicted clean sample",
         """
@@ -809,7 +809,7 @@ def ddim_step(x_t, eps_pred, t, t_prev, alphas_cumprod):
 """,
     ),
     (
-        "24",
+        "flow_matching_target",
         "flow_matching_target",
         "velocity points from data to noise",
         """
@@ -821,7 +821,7 @@ def flow_matching_target(noise, data, t):
 """,
     ),
     (
-        "24",
+        "flow_matching_target",
         "flow_matching_target",
         "t = 0 is data",
         """
@@ -833,7 +833,7 @@ def flow_matching_target(noise, data, t):
 """,
     ),
     (
-        "24",
+        "flow_matching_target",
         "flow_matching_target",
         "first time used for the whole batch",
         """
@@ -845,7 +845,7 @@ def flow_matching_target(noise, data, t):
 """,
     ),
     (
-        "25",
+        "euler_sample",
         "euler_sample",
         "velocity evaluated at the end of the step",
         """
@@ -859,7 +859,7 @@ def euler_sample(v_fn, x, num_steps):
 """,
     ),
     (
-        "25",
+        "euler_sample",
         "euler_sample",
         "input modified in place",
         """
@@ -871,7 +871,7 @@ def euler_sample(v_fn, x, num_steps):
 """,
     ),
     (
-        "25",
+        "euler_sample",
         "euler_sample",
         "step size of one",
         """
@@ -886,10 +886,13 @@ def euler_sample(v_fn, x, num_steps):
 
 
 def main():
-    registry = {e["id"]: e for e in json.loads((ROOT / "exercises.json").read_text(encoding="utf-8"))}
+    registry = {e["name"]: e for e in json.loads((ROOT / "exercises.json").read_text(encoding="utf-8"))}
 
-    covered = {m[0] for m in MUTANTS}
-    missing = sorted(set(registry) - covered)
+    unknown = sorted({m[0] for m in MUTANTS} - set(registry))
+    if unknown:
+        print("mutants for exercises that do not exist: " + ", ".join(unknown))
+        return 1
+    missing = [name for name in registry if name not in {m[0] for m in MUTANTS}]
     if missing:
         print("exercises without any mutant: " + ", ".join(missing))
         return 1
@@ -897,10 +900,10 @@ def main():
     survived = []
     killed = 0
     with tempfile.TemporaryDirectory() as tmp:
-        for number, (ex_id, function, label, source) in enumerate(MUTANTS):
-            entry = registry[ex_id]
+        for number, (name, function, label, source) in enumerate(MUTANTS):
+            entry = registry[name]
             if function not in entry["functions"]:
-                print(f"mutant {number}: {function} is not a function of exercise {ex_id}")
+                print(f"mutant {number}: {function} is not a function of {name}")
                 return 1
             if f"def {function}(" not in source:
                 print(f"mutant {number}: replacement does not define {function}")
@@ -908,7 +911,7 @@ def main():
 
             target = pathlib.Path(tmp) / f"m{number:03d}"
             shutil.copytree(ROOT / "solutions", target)
-            module = target / f"{entry['module']}.py"
+            module = target / entry["track"] / f"{name}.py"
             original = module.read_text(encoding="utf-8")
             if f"def {function}(" not in original:
                 print(f"mutant {number}: {function} not found in {module.name}")
@@ -916,7 +919,7 @@ def main():
             # A later definition replaces the earlier one at import time.
             module.write_text(original + "\n\n" + source.lstrip("\n"), encoding="utf-8", newline="\n")
 
-            node = f"{ROOT / 'tests' / ('test_' + entry['module'] + '.py')}::{entry['test']}"
+            node = f"{ROOT / 'tests' / ('test_' + entry['track'] + '.py')}::{entry['test']}"
             env = dict(os.environ, ROBOLINGS_TARGET=str(target))
             result = subprocess.run(
                 [sys.executable, "-m", "pytest", "-q", "--tb=no", "-p", "no:cacheprovider", node],
@@ -929,12 +932,12 @@ def main():
             if result.returncode == 1:
                 killed += 1
             else:
-                survived.append((ex_id, function, label, result.returncode))
+                survived.append((name, function, label, result.returncode))
 
     print(f"{killed} of {len(MUTANTS)} mutants rejected by the tests of their own exercise")
-    for ex_id, function, label, code in survived:
+    for name, function, label, code in survived:
         state = "passed every test" if code == 0 else f"pytest exit code {code}"
-        print(f"  NOT rejected: exercise {ex_id} {function}: {label} ({state})")
+        print(f"  NOT rejected: {name} {function}(): {label} ({state})")
     return 1 if survived else 0
 
 

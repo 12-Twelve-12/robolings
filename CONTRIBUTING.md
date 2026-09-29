@@ -16,7 +16,7 @@ Issues labelled `new exercise` are ideas nobody is working on yet. Leave a comme
 
 ## Adding an exercise
 
-1. Write the function in a module under `solutions/`. The docstring is the problem statement. Put the body between markers:
+1. Write the function in its own file, `solutions/<track>/<name>.py`. The docstring is the problem statement. Put the body between markers:
 
    ```python
    def my_function(x):
@@ -26,8 +26,8 @@ Issues labelled `new exercise` are ideas nobody is working on yet. Leave a comme
        # <<< solution
    ```
 
-2. Add an entry to `exercises.json`.
-3. Add a test class in `tests/`, named as in the entry. Don't call other exercises from a test; shared reference code goes in `tests/helpers.py`.
+2. Add an entry to `exercises.json`. The position in the file is the order learners see. Names are permanent, positions are not.
+3. Add a test class to `tests/test_<track>.py`, named as in the entry. Don't call other exercises from a test; shared reference code goes in `tests/helpers.py`.
 4. Add at least one wrong answer to `tools/mutants.py`.
 5. Regenerate the stubs with `python tools/make_exercises.py`. Don't edit `exercises/` by hand.
 6. Update the table and the exercise count in both READMEs.
@@ -43,8 +43,11 @@ python robolings.py --target solutions --expect all-pass
 python robolings.py --target exercises --expect all-fail
 python tools/mutants.py
 python tools/check_docs.py
+python -m pytest tools
 ```
 
 CI runs the same commands on Linux, macOS and Windows.
+
+Don't rename or move an existing exercise. People have answers in their forks under the current path.
 
 Exercises should need nothing but NumPy and run in well under a second.
