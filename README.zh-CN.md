@@ -13,10 +13,12 @@
 ```bash
 pip install -r requirements.txt
 python robolings.py           # 看进度和下一题
+python robolings.py watch     # 改完存盘就自动重测
 python robolings.py run slerp # 只测某一题
-python robolings.py list
 python robolings.py show slerp --zh   # 看中文题面
-python robolings.py --zh              # 题目名显示中文
+python robolings.py hint slerp --zh   # 卡住了看提示
+python robolings.py list
+python robolings.py --zh      # 题目名显示中文
 ```
 
 每道题都有中文题面，放在 `docs/zh/` 下，也可以用上面的 `show` 命令直接看。不想每次都加 `--zh` 的话，设置环境变量 `ROBOLINGS_LANG=zh`。
@@ -37,9 +39,13 @@ robolings  [######........................]  6/31
 Next: forward_kinematics
   edit   exercises/02_kinematics/forward_kinematics.py
   check  python robolings.py run forward_kinematics
+  read   python robolings.py show forward_kinematics
+  stuck  python robolings.py hint forward_kinematics
 ```
 
-卡住了可以看 `solutions/` 里的参考解。
+`watch` 是最舒服的用法：一个终端里开着它，另一个终端里改代码，每次存盘都会自动重测你刚改的那道题。
+
+卡住了先看 `hint` 的提示，实在不行再看 `solutions/` 里的参考解。`python robolings.py reset slerp` 会丢掉你的作答，把那道题恢复成空白。
 
 ### 在 GitHub 上看进度
 

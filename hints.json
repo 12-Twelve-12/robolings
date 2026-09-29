@@ -1,0 +1,126 @@
+{
+  "rodrigues": {
+    "en": "Build K from the axis after normalising it, not from the axis you were given.\nA good check: the axis itself does not move, so R @ k should equal k.",
+    "zh": "K 要用归一化之后的轴去构造，不是直接用传进来的 axis。\n一个自查：转轴本身不动，所以 R @ k 应该等于 k。"
+  },
+  "quat_mul": {
+    "en": "Write the product as scalar and vector parts: w = w1 w2 - dot(v1, v2), and\nv = w1 v2 + w2 v1 + cross(v1, v2). Check it with i * j == k and j * i == -k.",
+    "zh": "按标量部分和向量部分来写：w = w1 w2 - dot(v1, v2)，v = w1 v2 + w2 v1 + cross(v1, v2)。\n用 i * j == k 和 j * i == -k 自查。"
+  },
+  "quat_to_matrix": {
+    "en": "Normalise q first, then unpack w, x, y, z.\nThe terms with w are the ones that change sign across the diagonal.",
+    "zh": "先把 q 归一化，再拆成 w, x, y, z。\n带 w 的那些项就是关于对角线反号的部分。"
+  },
+  "matrix_to_quat": {
+    "en": "Four branches: trace, R[0,0], R[1,1], R[2,2]. Take the largest one and derive the\ncomponent it belongs to from it, the other three by dividing by it.\nTry a 180 degree rotation on paper first, that is the case the naive formula fails.",
+    "zh": "四个分支：trace、R[0,0]、R[1,1]、R[2,2]。取最大的那个，先算出它对应的分量，\n另外三个再除以它得到。先拿 180 度的情形在纸上推一遍，教科书公式正是在这里失效。"
+  },
+  "slerp": {
+    "en": "Two guards, and you need both: flip q1 when dot < 0, and fall back to a normalised\nlerp when dot > 0.9995. Compute dot once and reuse it.",
+    "zh": "两个保护，缺一不可：dot < 0 时把 q1 取反；dot > 0.9995 时改用归一化的线性插值。\ndot 算一次后复用。"
+  },
+  "kabsch": {
+    "en": "Follow the six steps in order. Step 4 is the one worth checking: after building R,\nassert that its determinant is +1 and not -1. The translation has to be computed\nfrom the final R, so it comes last.",
+    "zh": "照着六步顺序做。第 4 步值得单独验一下：R 构造出来之后，确认它的行列式是 +1 而不是 -1。\n平移要用最终的 R 算，所以放在最后。"
+  },
+  "transform_inverse": {
+    "en": "The rotation part of the inverse is R.T. The translation is -R.T @ p, not -p:\nthe old translation has to be expressed in the new frame.",
+    "zh": "逆的旋转部分是 R.T，平移部分是 -R.T @ p 而不是 -p：\n原来的平移要换到新坐标系里表达。"
+  },
+  "forward_kinematics": {
+    "en": "Keep one accumulator T and multiply on the right: T = T @ origins[i] @ joint_i.\nThe joint rotation comes after the origin, not before it.",
+    "zh": "用一个累积变量 T，一直往右乘：T = T @ origins[i] @ 关节旋转。\n关节旋转在 origin 之后，不是之前。"
+  },
+  "geometric_jacobian": {
+    "en": "Two things live in the wrong frame until you rotate them: the joint axis\n(rotate by frames[i]) and the tip offset (rotate by the last frame, then add its\nposition).",
+    "zh": "有两个量在你旋转它们之前都在错误的坐标系里：关节转轴（用 frames[i] 转）\n和指尖偏置（用最后一个坐标系转，再加上它的位置）。"
+  },
+  "dls_ik_step": {
+    "en": "J @ J.T is (m, m), so the matrix you add the damping to and hand to solve() is the\nsmall one. Remember the damping enters squared.",
+    "zh": "J @ J.T 是 (m, m)，所以加阻尼、送进 solve() 的是这个小矩阵。\n注意阻尼是平方之后加进去的。"
+  },
+  "expand_mimic": {
+    "en": "Two passes. First scatter q_active into the full vector with fancy indexing,\nthen walk the mimic list. Since source indexes the full vector and always points\nat an actuated joint, the order within the list does not matter.",
+    "zh": "分两趟。先用花式索引把 q_active 散射到完整向量里，再遍历 mimic 列表。\nsource 索引的是完整向量、并且一定指向主动关节，所以列表内部的顺序无所谓。"
+  },
+  "retarget_cost": {
+    "en": "Both terms carry a factor of one half. scale multiplies the human vectors, not the\nrobot ones. np.sum returns a numpy scalar, so wrap the result in float().",
+    "zh": "两项都带一个 0.5 的系数。scale 乘在人手向量上，不是机器人向量上。\nnp.sum 返回的是 numpy 标量，最后要用 float() 包一层。"
+  },
+  "fingertip_ik": {
+    "en": "The clip belongs inside the loop, after the update. Also copy q0 before you start,\nso the caller's array is left alone.",
+    "zh": "clip 要放在循环里、更新之后。另外开始前先把 q0 复制一份，别动到调用方的数组。"
+  },
+  "min_jerk": {
+    "en": "s is a function of tau, and tau = t / duration, so the chain rule brings one factor\nof 1/duration into the velocity and two into the acceleration.",
+    "zh": "s 是 tau 的函数，而 tau = t / duration，所以链式法则给速度带来一个 1/duration，\n给加速度带来两个。"
+  },
+  "lowpass_filter": {
+    "en": "Start the output at x[0], not at zero. Write to a fresh array rather than to x,\nand let NumPy broadcast the per-sample update over the trailing dimension.",
+    "zh": "输出的第一个值取 x[0]，不是零。写进一个新数组而不是写回 x，\n每步的更新让 NumPy 在后面那一维上广播。"
+  },
+  "mit_torque": {
+    "en": "Sum the three terms first, clip once at the end. Convert every argument with\nnp.asarray so that scalars and per-joint arrays both work.",
+    "zh": "先把三项加起来，最后只 clip 一次。每个参数都用 np.asarray 转一下，\n这样标量和逐关节数组都能用。"
+  },
+  "rate_limit": {
+    "en": "Clip the change, then add it to prev. Clipping target itself would pull a joint\nthat is legitimately far from zero back towards zero.",
+    "zh": "clip 的是变化量，再加到 prev 上。直接 clip target 会把本来就远离零的关节拽回零附近。"
+  },
+  "angle_diff": {
+    "en": "Shift by pi, take the modulus, shift back. Python's % returns a non-negative\nresult for a positive modulus, which is exactly what makes this work. angle_diff\nis the same expression applied to a - b.",
+    "zh": "加 pi、取模、再减 pi。Python 的 % 对正的模数返回非负结果，这正是这个写法成立的原因。\nangle_diff 就是把同一个表达式用在 a - b 上。"
+  },
+  "pid_step": {
+    "en": "Compute u_raw before you clip, you need both to detect saturation. The integral is\nfrozen only when the output is clipped and u_raw and error have the same sign,\nso an error that is already pulling the output back stays effective.",
+    "zh": "先算出 u_raw 再 clip，判断饱和需要两个值都在。只有在输出被截断、\n并且 u_raw 和 error 同号时才冻结积分，这样已经在把输出往回拉的误差仍然有效。"
+  },
+  "minmax": {
+    "en": "Compute the span once and build a safe divisor with np.where before dividing, not\nafter: dividing first still evaluates the division and warns. The same guard,\nwith lo instead of 0, gives you the inverse.",
+    "zh": "先算出 span，再用 np.where 造一个安全的除数，然后才做除法；先除再补会真的算一次\n除法并告警。反变换用同一个保护，只是把 0 换成 lo。"
+  },
+  "action_chunks": {
+    "en": "No loop needed. Build an index matrix with arange(T)[:, None] + arange(horizon),\ncompare it with T to get is_pad, and np.minimum it with T - 1 before indexing.",
+    "zh": "不用写循环。用 arange(T)[:, None] + arange(horizon) 造一个索引矩阵，\n和 T 比较得到 is_pad，再用 np.minimum 压到 T - 1 之后去取值。"
+  },
+  "delta_actions": {
+    "en": "The same state is subtracted from every action in the chunk, so NumPy broadcasts\nit and no loop is needed. np.where with the mask keeps the absolute dimensions.",
+    "zh": "块里每个动作减去的都是同一个 state，所以 NumPy 会自动广播，不需要循环。\n用 np.where 配合掩码保留绝对量的那些维度。"
+  },
+  "temporal_ensemble": {
+    "en": "preds[0] is the oldest prediction and gets exp(0) = 1, the largest weight. Divide\nby the sum of the weights, not by their count.",
+    "zh": "preds[0] 是最旧的预测，权重是 exp(0) = 1，也就是最大的那个。\n除以权重之和，不是除以个数。"
+  },
+  "obs_history": {
+    "en": "Same trick as the action chunks, mirrored: the offsets run from -n + 1 to 0, and\nnp.maximum(idx, 0) repeats the first observation instead of wrapping to the end.",
+    "zh": "和动作分块是同一个套路，只是方向相反：偏移从 -n + 1 到 0，\n用 np.maximum(idx, 0) 把开头重复出来，而不是绕到末尾去。"
+  },
+  "cosine_schedule": {
+    "en": "betas[i] compares f at two consecutive steps, so compute f on arange(num_steps)\nand on arange(num_steps) + 1. alphas_cumprod is the cumulative product of\n1 - betas, so the cap on beta affects it too.",
+    "zh": "betas[i] 比较的是相邻两步的 f，所以对 arange(num_steps) 和 arange(num_steps) + 1\n各算一次 f。alphas_cumprod 是 1 - betas 的累乘，所以对 beta 的截断也会影响它。"
+  },
+  "q_sample": {
+    "en": "Index alphas_cumprod with t to get one value per sample, then reshape it to\n(-1,) + (1,) * (x0.ndim - 1) so it broadcasts over whatever trailing dimensions\nthe chunk has.",
+    "zh": "用 t 去索引 alphas_cumprod，得到每个样本一个值，再 reshape 成\n(-1,) + (1,) * (x0.ndim - 1)，这样不管动作块后面有几维都能广播。"
+  },
+  "ddpm_step": {
+    "en": "Two different quantities are easy to mix up: betas[t] appears in the mean, while\nthe variance is the posterior one, which also involves alphas_cumprod[t - 1].\nHandle t == 0 before you touch index t - 1.",
+    "zh": "有两个量容易混：betas[t] 出现在均值里，而方差用的是后验方差，还要用到\nalphas_cumprod[t - 1]。在碰 t - 1 这个下标之前先处理掉 t == 0。"
+  },
+  "ddim_step": {
+    "en": "Recover x0 from x_t and eps_pred first, then push it forward to t_prev with the\nsame eps_pred. The only special case is t_prev < 0, where a_prev is 1.",
+    "zh": "先从 x_t 和 eps_pred 反推出 x0，再用同一个 eps_pred 把它推到 t_prev。\n唯一的特殊情况是 t_prev < 0，此时 a_prev 取 1。"
+  },
+  "flow_matching_target": {
+    "en": "The path is a straight line, so its velocity does not depend on t at all. Reshape t\nfor broadcasting the same way as in q_sample.",
+    "zh": "路径是一条直线，所以它的速度完全不依赖 t。t 的 reshape 方式和 q_sample 里一样。"
+  },
+  "euler_sample": {
+    "en": "t is i * dt, so it starts at 0 and stops one step short of 1. Copy x before the\nloop and rebind it with x = x + ..., so the caller's array is not modified.",
+    "zh": "t 就是 i * dt，从 0 开始，到 1 之前一步为止。循环前先复制 x，\n并且用 x = x + ... 重新绑定，别原地改调用方的数组。"
+  },
+  "midpoint_sample": {
+    "en": "The second call takes both the midpoint state and the midpoint time. Passing the\nold state, or the old time, gives you something that is no better than Euler.",
+    "zh": "第二次调用要同时用中点处的状态和中点处的时间。只要有一个用了旧值，\n结果就不会比欧拉法更好。"
+  }
+}

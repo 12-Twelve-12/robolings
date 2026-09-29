@@ -32,7 +32,7 @@ def copy_with_solved_exercises(tmp_path):
     """A copy of the repository in which every exercise is solved."""
     work = tmp_path / "repo"
     work.mkdir()
-    for name in ("tests", "solutions", "docs", "robolings.py", "exercises.json"):
+    for name in ("tests", "solutions", "docs", "tools", "robolings.py", "exercises.json", "hints.json"):
         source = ROOT / name
         if source.is_dir():
             shutil.copytree(source, work / name, ignore=shutil.ignore_patterns("__pycache__"))
@@ -171,6 +171,97 @@ def test_badge_colours():
     assert colour(10, 30) == colour(19, 30) == "#dfb317"
     assert colour(20, 30) == colour(29, 30) == "#97ca00"
     assert colour(30, 30) == "#4c1"
+
+
+def cli_raw(work, *args, stdin=""):
+    return subprocess.run(
+        [sys.executable, "robolings.py", *args],
+        cwd=work,
+        input=stdin,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+
+
+def test_hint_in_both_languages(tmp_path):
+    work = copy_with_solved_exercises(tmp_path)
+    assert "branches" in cli(work, "hint", "matrix_to_quat")
+    assert "分支" in cli(work, "hint", "matrix_to_quat", "--zh")
+
+
+def test_hint_accepts_a_position(tmp_path):
+    work = copy_with_solved_exercises(tmp_path)
+    names = [e["name"] for e in json.loads((ROOT / "exercises.json").read_text(encoding="utf-8"))]
+    assert cli(work, "hint", "slerp") == cli(work, "hint", str(names.index("slerp") + 1))
+
+
+def test_every_exercise_has_a_hint(tmp_path):
+    work = copy_with_solved_exercises(tmp_path)
+    for name in json.loads((work / "hints.json").read_text(encoding="utf-8")):
+        for extra in ([], ["--zh"]):
+            assert cli(work, "hint", name, *extra).strip()
+
+
+def test_reset_restores_the_stub(tmp_path):
+    work = copy_with_solved_exercises(tmp_path)
+    path = work / "exercises" / "01_rotations" / "slerp.py"
+    assert "NotImplementedError" not in path.read_text(encoding="utf-8")
+    result = cli_raw(work, "reset", "slerp", "--force")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "NotImplementedError" in path.read_text(encoding="utf-8")
+    assert is_open(progress(work), "slerp")
+
+
+def test_reset_needs_confirmation(tmp_path):
+    work = copy_with_solved_exercises(tmp_path)
+    path = work / "exercises" / "04_control" / "min_jerk.py"
+    before = path.read_text(encoding="utf-8")
+    # no input at all, a refusal, and an answer that is not exactly "yes"
+    for stdin in ("", "no" + chr(10), "y" + chr(10)):
+        result = cli_raw(work, "reset", "min_jerk", stdin=stdin)
+        assert result.returncode == 1, result.stdout
+        assert path.read_text(encoding="utf-8") == before
+    result = cli_raw(work, "reset", "min_jerk", stdin="yes" + chr(10))
+    assert result.returncode == 0, result.stdout
+    assert path.read_text(encoding="utf-8") != before
+
+
+def test_reset_of_an_untouched_exercise_says_so(tmp_path):
+    work = copy_with_solved_exercises(tmp_path)
+    cli_raw(work, "reset", "slerp", "--force")
+    result = cli_raw(work, "reset", "slerp")
+    assert result.returncode == 0
+    assert "already a fresh stub" in result.stdout
+
+
+def test_brief_progress_leaves_out_the_list(tmp_path):
+    work = copy_with_solved_exercises(tmp_path)
+    full = cli(work)
+    brief = cli(work, "--brief")
+    assert f"{TOTAL}/{TOTAL}" in brief
+    assert "slerp" not in brief
+    assert "slerp" in full
+
+
+def test_watch_spots_an_edited_exercise(tmp_path):
+    sys.path.insert(0, str(ROOT))
+    import robolings
+
+    work = copy_with_solved_exercises(tmp_path)
+    folder = work / "exercises"
+    registry = json.loads((work / "exercises.json").read_text(encoding="utf-8"))
+    before = robolings.snapshot(folder)
+    assert robolings.changed_exercises(registry, str(folder), before, before) == []
+
+    path = folder / "05_imitation" / "minmax.py"
+    path.write_text(path.read_text(encoding="utf-8") + chr(10) + "# edited" + chr(10), encoding="utf-8")
+    after = robolings.snapshot(folder)
+    assert robolings.changed_exercises(registry, str(folder), before, after) == ["minmax"]
+
+    (folder / "01_rotations" / "slerp.py").unlink()
+    gone = robolings.changed_exercises(registry, str(folder), after, robolings.snapshot(folder))
+    assert gone == ["slerp"]
 
 
 def test_strip_replaces_the_marked_block():
