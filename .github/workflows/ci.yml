@@ -1,0 +1,79 @@
+name: CI
+
+# Checks the exercise set itself, so it only runs upstream. In a fork the
+# exercises are (hopefully) solved and "every stub fails" no longer holds.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    if: github.repository == '12-Twelve-12/robolings'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .
+      - run: ruff format --check .
+
+  checks:
+    if: github.repository == '12-Twelve-12/robolings'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -r requirements.txt
+      - name: stubs are generated from the solutions
+        run: python tools/make_exercises.py --check
+      - name: solutions pass
+        run: python robolings.py --target solutions --expect all-pass
+      - name: stubs fail
+        run: python robolings.py --target exercises --expect all-fail
+      - name: wrong answers are rejected
+        run: python tools/mutants.py
+      - name: README matches the exercise list
+        run: python tools/check_docs.py
+
+  oldest-deps:
+    # requirements.txt promises these lower bounds
+    if: github.repository == '12-Twelve-12/robolings'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - run: pip install numpy==1.24.4 pytest==7.0.0
+      - run: python robolings.py --target solutions --expect all-pass
+      - run: python robolings.py --target exercises --expect all-fail
+      - run: python tools/mutants.py
+
+  all-green:
+    # the one check that branch protection requires
+    if: always() && github.repository == '12-Twelve-12/robolings'
+    needs: [lint, checks, oldest-deps]
+    runs-on: ubuntu-latest
+    steps:
+      - name: fail unless every job succeeded
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped')
+        run: exit 1
+      - run: echo "all jobs passed"
