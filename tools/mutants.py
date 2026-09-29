@@ -882,6 +882,363 @@ def euler_sample(v_fn, x, num_steps):
     return x
 """,
     ),
+    (
+        "kabsch",
+        "kabsch",
+        "no check for a reflection",
+        """
+def kabsch(P, Q):
+    P = np.asarray(P, dtype=np.float64)
+    Q = np.asarray(Q, dtype=np.float64)
+    p_mean, q_mean = P.mean(axis=0), Q.mean(axis=0)
+    U, _, Vt = np.linalg.svd((P - p_mean).T @ (Q - q_mean))
+    R = Vt.T @ U.T
+    return R, q_mean - R @ p_mean
+""",
+    ),
+    (
+        "kabsch",
+        "kabsch",
+        "rotation from Q to P",
+        """
+def kabsch(P, Q):
+    P = np.asarray(P, dtype=np.float64)
+    Q = np.asarray(Q, dtype=np.float64)
+    p_mean, q_mean = P.mean(axis=0), Q.mean(axis=0)
+    U, _, Vt = np.linalg.svd((Q - q_mean).T @ (P - p_mean))
+    d = np.sign(np.linalg.det(Vt.T @ U.T))
+    R = Vt.T @ np.diag([1.0, 1.0, d]) @ U.T
+    return R, q_mean - R @ p_mean
+""",
+    ),
+    (
+        "kabsch",
+        "kabsch",
+        "translation ignores the rotation",
+        """
+def kabsch(P, Q):
+    P = np.asarray(P, dtype=np.float64)
+    Q = np.asarray(Q, dtype=np.float64)
+    p_mean, q_mean = P.mean(axis=0), Q.mean(axis=0)
+    U, _, Vt = np.linalg.svd((P - p_mean).T @ (Q - q_mean))
+    d = np.sign(np.linalg.det(Vt.T @ U.T))
+    R = Vt.T @ np.diag([1.0, 1.0, d]) @ U.T
+    return R, q_mean - p_mean
+""",
+    ),
+    (
+        "kabsch",
+        "kabsch",
+        "centroids are not removed",
+        """
+def kabsch(P, Q):
+    P = np.asarray(P, dtype=np.float64)
+    Q = np.asarray(Q, dtype=np.float64)
+    U, _, Vt = np.linalg.svd(P.T @ Q)
+    d = np.sign(np.linalg.det(Vt.T @ U.T))
+    R = Vt.T @ np.diag([1.0, 1.0, d]) @ U.T
+    return R, Q.mean(axis=0) - R @ P.mean(axis=0)
+""",
+    ),
+    (
+        "angle_diff",
+        "wrap_to_pi",
+        "wraps to [0, 2 pi)",
+        """
+def wrap_to_pi(a):
+    return np.asarray(a, dtype=np.float64) % (2.0 * np.pi)
+""",
+    ),
+    (
+        "angle_diff",
+        "wrap_to_pi",
+        "clips instead of wrapping",
+        """
+def wrap_to_pi(a):
+    return np.clip(np.asarray(a, dtype=np.float64), -np.pi, np.pi)
+""",
+    ),
+    (
+        "angle_diff",
+        "angle_diff",
+        "raw difference",
+        """
+def angle_diff(a, b):
+    return np.asarray(a, dtype=np.float64) - np.asarray(b, dtype=np.float64)
+""",
+    ),
+    (
+        "angle_diff",
+        "angle_diff",
+        "wraps the inputs but not the difference",
+        """
+def angle_diff(a, b):
+    def w(x):
+        return (np.asarray(x, dtype=np.float64) + np.pi) % (2.0 * np.pi) - np.pi
+    return w(a) - w(b)
+""",
+    ),
+    (
+        "angle_diff",
+        "angle_diff",
+        "sign reversed",
+        """
+def angle_diff(a, b):
+    d = np.asarray(b, dtype=np.float64) - np.asarray(a, dtype=np.float64)
+    return (d + np.pi) % (2.0 * np.pi) - np.pi
+""",
+    ),
+    (
+        "pid_step",
+        "pid_step",
+        "no anti-windup",
+        """
+def pid_step(state, error, dt, kp, ki, kd, u_limit):
+    integral, prev_error = state
+    integral = integral + error * dt
+    derivative = 0.0 if prev_error is None else (error - prev_error) / dt
+    u = kp * error + ki * integral + kd * derivative
+    return min(max(u, -u_limit), u_limit), (integral, error)
+""",
+    ),
+    (
+        "pid_step",
+        "pid_step",
+        "integral frozen whenever saturated",
+        """
+def pid_step(state, error, dt, kp, ki, kd, u_limit):
+    integral, prev_error = state
+    integral_new = integral + error * dt
+    derivative = 0.0 if prev_error is None else (error - prev_error) / dt
+    u_raw = kp * error + ki * integral_new + kd * derivative
+    u = min(max(u_raw, -u_limit), u_limit)
+    if u != u_raw:
+        integral_new = integral
+    return u, (integral_new, error)
+""",
+    ),
+    (
+        "pid_step",
+        "pid_step",
+        "derivative kick on the first call",
+        """
+def pid_step(state, error, dt, kp, ki, kd, u_limit):
+    integral, prev_error = state
+    integral_new = integral + error * dt
+    derivative = (error - (0.0 if prev_error is None else prev_error)) / dt
+    u_raw = kp * error + ki * integral_new + kd * derivative
+    u = min(max(u_raw, -u_limit), u_limit)
+    if u != u_raw and u_raw * error > 0.0:
+        integral_new = integral
+    return u, (integral_new, error)
+""",
+    ),
+    (
+        "pid_step",
+        "pid_step",
+        "output is not clipped",
+        """
+def pid_step(state, error, dt, kp, ki, kd, u_limit):
+    integral, prev_error = state
+    integral_new = integral + error * dt
+    derivative = 0.0 if prev_error is None else (error - prev_error) / dt
+    u_raw = kp * error + ki * integral_new + kd * derivative
+    if abs(u_raw) > u_limit and u_raw * error > 0.0:
+        integral_new = integral
+    return u_raw, (integral_new, error)
+""",
+    ),
+    (
+        "pid_step",
+        "pid_step",
+        "integral from before this step",
+        """
+def pid_step(state, error, dt, kp, ki, kd, u_limit):
+    integral, prev_error = state
+    integral_new = integral + error * dt
+    derivative = 0.0 if prev_error is None else (error - prev_error) / dt
+    u_raw = kp * error + ki * integral + kd * derivative
+    u = min(max(u_raw, -u_limit), u_limit)
+    if u != u_raw and u_raw * error > 0.0:
+        integral_new = integral
+    return u, (integral_new, error)
+""",
+    ),
+    (
+        "delta_actions",
+        "to_delta",
+        "difference between consecutive actions",
+        """
+def to_delta(chunk, state, absolute_mask):
+    chunk = np.asarray(chunk, dtype=np.float64)
+    state = np.asarray(state, dtype=np.float64)
+    mask = np.asarray(absolute_mask, dtype=bool)
+    previous = np.vstack([state[None, :], chunk[:-1]])
+    return np.where(mask, chunk, chunk - previous)
+""",
+    ),
+    (
+        "delta_actions",
+        "to_delta",
+        "mask ignored",
+        """
+def to_delta(chunk, state, absolute_mask):
+    return np.asarray(chunk, dtype=np.float64) - np.asarray(state, dtype=np.float64)
+""",
+    ),
+    (
+        "delta_actions",
+        "to_delta",
+        "mask inverted",
+        """
+def to_delta(chunk, state, absolute_mask):
+    chunk = np.asarray(chunk, dtype=np.float64)
+    mask = np.asarray(absolute_mask, dtype=bool)
+    return np.where(mask, chunk - np.asarray(state, dtype=np.float64), chunk)
+""",
+    ),
+    (
+        "delta_actions",
+        "from_delta",
+        "accumulates the deltas",
+        """
+def from_delta(delta, state, absolute_mask):
+    delta = np.asarray(delta, dtype=np.float64)
+    mask = np.asarray(absolute_mask, dtype=bool)
+    return np.where(mask, delta, np.cumsum(delta, axis=0) + np.asarray(state, dtype=np.float64))
+""",
+    ),
+    (
+        "delta_actions",
+        "from_delta",
+        "mask ignored",
+        """
+def from_delta(delta, state, absolute_mask):
+    return np.asarray(delta, dtype=np.float64) + np.asarray(state, dtype=np.float64)
+""",
+    ),
+    (
+        "ddpm_step",
+        "ddpm_step",
+        "noise added on the last step",
+        """
+def ddpm_step(x_t, eps_pred, t, betas, alphas_cumprod, noise):
+    beta, a_t = betas[t], alphas_cumprod[t]
+    mean = (x_t - beta / np.sqrt(1.0 - a_t) * eps_pred) / np.sqrt(1.0 - beta)
+    var = beta * (1.0 - alphas_cumprod[t - 1]) / (1.0 - a_t)
+    return mean + np.sqrt(var) * noise
+""",
+    ),
+    (
+        "ddpm_step",
+        "ddpm_step",
+        "variance is beta",
+        """
+def ddpm_step(x_t, eps_pred, t, betas, alphas_cumprod, noise):
+    beta, a_t = betas[t], alphas_cumprod[t]
+    mean = (x_t - beta / np.sqrt(1.0 - a_t) * eps_pred) / np.sqrt(1.0 - beta)
+    if t == 0:
+        return mean
+    return mean + np.sqrt(beta) * noise
+""",
+    ),
+    (
+        "ddpm_step",
+        "ddpm_step",
+        "divides by the cumulative alpha",
+        """
+def ddpm_step(x_t, eps_pred, t, betas, alphas_cumprod, noise):
+    beta, a_t = betas[t], alphas_cumprod[t]
+    mean = (x_t - beta / np.sqrt(1.0 - a_t) * eps_pred) / np.sqrt(a_t)
+    if t == 0:
+        return mean
+    var = beta * (1.0 - alphas_cumprod[t - 1]) / (1.0 - a_t)
+    return mean + np.sqrt(var) * noise
+""",
+    ),
+    (
+        "ddpm_step",
+        "ddpm_step",
+        "noise scaled by the variance, not the std",
+        """
+def ddpm_step(x_t, eps_pred, t, betas, alphas_cumprod, noise):
+    beta, a_t = betas[t], alphas_cumprod[t]
+    mean = (x_t - beta / np.sqrt(1.0 - a_t) * eps_pred) / np.sqrt(1.0 - beta)
+    if t == 0:
+        return mean
+    var = beta * (1.0 - alphas_cumprod[t - 1]) / (1.0 - a_t)
+    return mean + var * noise
+""",
+    ),
+    (
+        "midpoint_sample",
+        "midpoint_sample",
+        "plain Euler",
+        """
+def midpoint_sample(v_fn, x, num_steps):
+    x = np.asarray(x, dtype=np.float64).copy()
+    dt = 1.0 / num_steps
+    for i in range(num_steps):
+        v_fn(x, i * dt + 0.5 * dt)
+        x = x + dt * v_fn(x, i * dt)
+    return x
+""",
+    ),
+    (
+        "midpoint_sample",
+        "midpoint_sample",
+        "second call uses the old state",
+        """
+def midpoint_sample(v_fn, x, num_steps):
+    x = np.asarray(x, dtype=np.float64).copy()
+    dt = 1.0 / num_steps
+    for i in range(num_steps):
+        v_fn(x, i * dt)
+        x = x + dt * v_fn(x, i * dt + 0.5 * dt)
+    return x
+""",
+    ),
+    (
+        "midpoint_sample",
+        "midpoint_sample",
+        "second call uses the old time",
+        """
+def midpoint_sample(v_fn, x, num_steps):
+    x = np.asarray(x, dtype=np.float64).copy()
+    dt = 1.0 / num_steps
+    for i in range(num_steps):
+        x_mid = x + 0.5 * dt * v_fn(x, i * dt)
+        x = x + dt * v_fn(x_mid, i * dt)
+    return x
+""",
+    ),
+    (
+        "midpoint_sample",
+        "midpoint_sample",
+        "full step to the midpoint",
+        """
+def midpoint_sample(v_fn, x, num_steps):
+    x = np.asarray(x, dtype=np.float64).copy()
+    dt = 1.0 / num_steps
+    for i in range(num_steps):
+        x_mid = x + dt * v_fn(x, i * dt)
+        x = x + dt * v_fn(x_mid, i * dt + 0.5 * dt)
+    return x
+""",
+    ),
+    (
+        "midpoint_sample",
+        "midpoint_sample",
+        "input modified in place",
+        """
+def midpoint_sample(v_fn, x, num_steps):
+    dt = 1.0 / num_steps
+    for i in range(num_steps):
+        x_mid = x + 0.5 * dt * v_fn(x, i * dt)
+        x += dt * v_fn(x_mid, i * dt + 0.5 * dt)
+    return x
+""",
+    ),
 ]
 
 
