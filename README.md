@@ -13,8 +13,10 @@ Fork the repo and clone your fork, then:
 ```bash
 pip install -r requirements.txt
 python robolings.py           # progress, and what to do next
+python robolings.py watch     # rerun an exercise every time you save it
 python robolings.py run slerp # test a single exercise
 python robolings.py show slerp # print the problem statement
+python robolings.py hint slerp # a nudge if you are stuck
 python robolings.py list
 ```
 
@@ -34,9 +36,13 @@ robolings  [######........................]  6/31
 Next: forward_kinematics
   edit   exercises/02_kinematics/forward_kinematics.py
   check  python robolings.py run forward_kinematics
+  read   python robolings.py show forward_kinematics
+  stuck  python robolings.py hint forward_kinematics
 ```
 
-Answers are in `solutions/` if you get stuck.
+`watch` is the comfortable way to work: leave it running in one terminal, edit in another, and every save reruns the exercise you just touched.
+
+Stuck? `hint` gives you a nudge, and the answers are in `solutions/`. `python robolings.py reset slerp` throws your attempt away and starts that exercise over.
 
 ### Progress on GitHub
 
