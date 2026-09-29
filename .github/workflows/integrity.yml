@@ -1,0 +1,35 @@
+name: Integrity
+
+# Checks the exercise set itself. It runs only in the upstream repository:
+# in a fork the exercises are solved, so "every stub fails" no longer holds.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  integrity:
+    if: github.repository == '12-Twelve-12/robolings'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -r requirements.txt
+      - name: exercises/ is generated from solutions/
+        run: python tools/make_exercises.py --check
+      - name: Every reference solution passes
+        run: python robolings.py --target solutions --expect all-pass
+      - name: Every unsolved exercise fails
+        run: python robolings.py --target exercises --expect all-fail
+      - name: Plausible wrong answers are rejected
+        run: python tools/mutants.py

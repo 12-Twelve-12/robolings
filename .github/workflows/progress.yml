@@ -1,0 +1,25 @@
+name: Progress
+
+# Runs in every fork. It reports how many exercises pass and never fails,
+# so an unfinished exercise does not show up as a red cross.
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  progress:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Grade the exercises
+        run: |
+          python robolings.py --markdown >> "$GITHUB_STEP_SUMMARY"
+          python robolings.py
