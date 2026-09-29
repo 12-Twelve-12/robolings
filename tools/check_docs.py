@@ -2,7 +2,8 @@
 
 1. Both READMEs state the number of exercises and have one table row per
    track with the number of exercises in it.
-2. Every Chinese statement in docs/zh/ belongs to an exercise and was
+2. hints.json has one hint per exercise, in both languages.
+3. Every Chinese statement in docs/zh/ belongs to an exercise and was
    written for the current English text. Each file starts with a stamp,
    a hash of the English docstrings it was translated from.
 
@@ -62,6 +63,25 @@ def check_readmes(registry):
     return problems
 
 
+def check_hints(registry):
+    hints = robolings.load_hints()
+    names = [e["name"] for e in registry]
+    problems = []
+    for name in sorted(set(hints) - set(names)):
+        problems.append(f"hints.json: {name} is not an exercise")
+    if set(hints) == set(names) and list(hints) != names:
+        problems.append("hints.json: entries are not in the order of exercises.json")
+    for entry in registry:
+        found = hints.get(entry["name"])
+        if found is None:
+            problems.append(f"hints.json: no hint for {entry['name']}")
+            continue
+        for language in ("en", "zh"):
+            if not found.get(language, "").strip():
+                problems.append(f"hints.json: {entry['name']} has no '{language}' hint")
+    return problems
+
+
 def check_zh(registry, stamp):
     problems = []
     known = {}
@@ -115,12 +135,13 @@ def main():
         print(f"stamped {translated} Chinese statements")
         return 0
 
-    problems = check_readmes(registry) + zh_problems
+    problems = check_readmes(registry) + check_hints(registry) + zh_problems
     for problem in problems:
         print(problem)
     if not problems:
         tracks = len({e["track"] for e in registry})
         print(f"READMEs agree with exercises.json ({len(registry)} exercises in {tracks} tracks)")
+        print(f"hints.json covers all {len(registry)} exercises in both languages")
         print(f"Chinese statements are up to date ({translated} of {len(registry)})")
     return 1 if problems else 0
 
