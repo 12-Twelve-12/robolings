@@ -1,6 +1,6 @@
 """Check that both READMEs agree with exercises.json.
 
-    python tools/check_docs.py
+python tools/check_docs.py
 """
 
 import json
