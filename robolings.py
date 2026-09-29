@@ -3,9 +3,12 @@
     python robolings.py               show progress and the next exercise
     python robolings.py run slerp     run the tests of one exercise
     python robolings.py run 5         same, by position in the list
+    python robolings.py show slerp    print the problem statement
     python robolings.py list          list every exercise
-    python robolings.py --zh          titles in Chinese
+    python robolings.py --zh          Chinese titles and statements
     python robolings.py --markdown    progress as Markdown, for CI summaries
+
+Set ROBOLINGS_LANG=zh to make --zh the default.
 
 Maintainers:
 
@@ -14,6 +17,7 @@ Maintainers:
 """
 
 import argparse
+import ast
 import contextlib
 import io
 import json
@@ -86,6 +90,35 @@ def title_of(entry, zh):
     return entry["title_zh"] if zh else entry["title"]
 
 
+def zh_file(entry):
+    return ROOT / "docs" / "zh" / entry["track"] / f"{entry['name']}.md"
+
+
+def english_statement(entry):
+    """The problem statement as written in the docstrings.
+
+    Read from solutions/, because a learner may have edited their own copy.
+    """
+    path = ROOT / "solutions" / entry["track"] / f"{entry['name']}.py"
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    functions = {n.name: n for n in tree.body if isinstance(n, ast.FunctionDef)}
+    parts = [ast.get_docstring(tree) or ""]
+    for name in entry["functions"]:
+        node = functions[name]
+        signature = f"{name}({', '.join(a.arg for a in node.args.args)})"
+        parts.append(signature + "\n\n" + (ast.get_docstring(node) or ""))
+    return "\n\n".join(parts)
+
+
+def chinese_statement(entry):
+    """The Chinese statement, or None if nobody has written one yet."""
+    path = zh_file(entry)
+    if not path.exists():
+        return None
+    lines = path.read_text(encoding="utf-8").split("\n")
+    return "\n".join(line for line in lines if not line.startswith("<!--")).strip("\n")
+
+
 def print_progress(registry, status, target, zh):
     done = sum(1 for s in status.values() if s == "done")
     total = len(registry)
@@ -107,6 +140,8 @@ def print_progress(registry, status, target, zh):
     print(f"Next: {nxt['name']}")
     print(f"  edit   {file_of(nxt, target)}")
     print(f"  check  python robolings.py run {nxt['name']}")
+    if zh and zh_file(nxt).exists():
+        print(f"  read   python robolings.py show {nxt['name']} --zh")
 
 
 def print_markdown(registry, status, zh):
@@ -142,12 +177,25 @@ def run_one(registry, key, target):
     return int(pytest.main(["-q", "--tb=short", "-p", "no:cacheprovider", node]))
 
 
+def show(registry, key, target, zh):
+    entry = find(registry, key)
+    text = chinese_statement(entry) if zh else None
+    if zh and text is None:
+        print(f"(no Chinese statement for {entry['name']} yet, showing the English one)\n")
+    if text is None:
+        text = f"{entry['name']}: {entry['title']}\nfile: {file_of(entry, target)}\n\n" + english_statement(
+            entry
+        )
+    print(text)
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description="Small exercises for robot learning.")
-    parser.add_argument("command", nargs="?", default="progress", choices=["progress", "run", "list"])
+    parser.add_argument("command", nargs="?", default="progress", choices=["progress", "run", "show", "list"])
     parser.add_argument("exercise", nargs="?")
     parser.add_argument("--target", default="exercises", choices=["exercises", "solutions"])
-    parser.add_argument("--zh", action="store_true", help="titles in Chinese")
+    parser.add_argument("--zh", action="store_true", help="Chinese titles and statements")
     parser.add_argument("--markdown", action="store_true")
     parser.add_argument("--expect", choices=["all-pass", "all-fail"])
     args = parser.parse_args()
@@ -155,24 +203,27 @@ def main():
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
+    zh = args.zh or os.environ.get("ROBOLINGS_LANG", "").lower().startswith("zh")
     registry = load_registry()
 
     if args.command == "list":
         for number, entry in enumerate(registry, start=1):
-            title = title_of(entry, args.zh)
+            title = title_of(entry, zh)
             print(f"{number:2d}  {entry['name']:<22} {title:<45} {file_of(entry, args.target)}")
         return 0
 
-    if args.command == "run":
+    if args.command in ("run", "show"):
         if not args.exercise:
-            raise SystemExit("usage: python robolings.py run <name>")
-        return run_one(registry, args.exercise, args.target)
+            raise SystemExit(f"usage: python robolings.py {args.command} <name>")
+        if args.command == "run":
+            return run_one(registry, args.exercise, args.target)
+        return show(registry, args.exercise, args.target, zh)
 
     status = grade(registry, run_all(args.target))
     if args.markdown:
-        print_markdown(registry, status, args.zh)
+        print_markdown(registry, status, zh)
     else:
-        print_progress(registry, status, args.target, args.zh)
+        print_progress(registry, status, args.target, zh)
 
     if args.expect:
         wanted = "done" if args.expect == "all-pass" else "todo"

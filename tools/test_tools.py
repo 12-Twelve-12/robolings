@@ -20,7 +20,7 @@ def copy_with_solved_exercises(tmp_path):
     """A copy of the repository in which every exercise is solved."""
     work = tmp_path / "repo"
     work.mkdir()
-    for name in ("tests", "solutions", "robolings.py", "exercises.json"):
+    for name in ("tests", "solutions", "docs", "robolings.py", "exercises.json"):
         source = ROOT / name
         if source.is_dir():
             shutil.copytree(source, work / name, ignore=shutil.ignore_patterns("__pycache__"))
@@ -84,6 +84,51 @@ def test_run_accepts_a_name_or_a_position(tmp_path):
         )
         assert result.returncode == 0, result.stdout
         assert result.stdout.startswith("slerp ")
+
+
+def cli(work, *args, env=None):
+    result = subprocess.run(
+        [sys.executable, "robolings.py", *args],
+        cwd=work,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        env=env,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    return result.stdout
+
+
+def test_show_prints_the_english_statement(tmp_path):
+    out = cli(copy_with_solved_exercises(tmp_path), "show", "ddim_step")
+    assert "ddim_step(x_t, eps_pred, t, t_prev, alphas_cumprod)" in out
+    assert "One deterministic DDIM step" in out
+    assert "exercises/06_diffusion/ddim_step.py" in out
+
+
+def test_show_prints_the_chinese_statement(tmp_path):
+    out = cli(copy_with_solved_exercises(tmp_path), "show", "ddim_step", "--zh")
+    assert "DDIM 单步" in out
+    assert "<!--" not in out
+    assert "One deterministic DDIM step" not in out
+
+
+def test_show_falls_back_to_english(tmp_path):
+    work = copy_with_solved_exercises(tmp_path)
+    (work / "docs" / "zh" / "06_diffusion" / "ddim_step.md").unlink()
+    out = cli(work, "show", "ddim_step", "--zh")
+    assert "no Chinese statement" in out
+    assert "One deterministic DDIM step" in out
+
+
+def test_language_from_the_environment(tmp_path):
+    import os
+
+    work = copy_with_solved_exercises(tmp_path)
+    out = cli(work, "list", env=dict(os.environ, ROBOLINGS_LANG="zh"))
+    assert "球面线性插值" in out
+    out = cli(work, "list", env={k: v for k, v in os.environ.items() if k != "ROBOLINGS_LANG"})
+    assert "球面线性插值" not in out
 
 
 def test_strip_replaces_the_marked_block():
