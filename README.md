@@ -2,7 +2,7 @@
 
 Exercises for robot learning, in the style of [rustlings](https://github.com/rust-lang/rustlings).
 
-31 small functions to implement, starting at Rodrigues' formula and ending at the sampler of a flow-matching policy. NumPy only, no GPU, no simulator. The tests run in under a second.
+36 small functions to implement, starting at Rodrigues' formula and ending at the sampler of a flow-matching policy. NumPy only, no GPU, no simulator. The tests run in under a second.
 
 [中文说明](README.zh-CN.md) (the problem statements are available in Chinese too)
 
@@ -23,7 +23,7 @@ python robolings.py list
 The stubs are in `exercises/`, one file per exercise. Replace the `raise NotImplementedError` and run the exercise again. Python 3.10+.
 
 ```text
-robolings  [######........................]  6/31
+robolings  [######........................]  6/36
 
   01_rotations
    [x]  1  rodrigues              Rodrigues' rotation formula
@@ -60,11 +60,11 @@ Use **Sync fork** on GitHub, or merge `upstream/main`. New exercises arrive as n
 
 | Track | Exercises | Content |
 |---|---|---|
-| Rotations | 6 | Rodrigues, quaternion product, quaternion ↔ matrix, slerp, Kabsch |
+| Rotations | 7 | Rodrigues, quaternion product, quaternion ↔ matrix, slerp, Kabsch, log and exp |
 | Kinematics | 4 | transform inverse, FK, geometric Jacobian, damped least squares |
 | Dexterous hands | 3 | mimic joints, retargeting cost, fingertip IK with joint limits |
-| Control | 6 | min-jerk, low-pass filter, MIT-mode impedance control, rate limiter, angle wrapping, PID with anti-windup |
-| Imitation learning | 5 | normalisation, action chunking, relative actions, temporal ensembling, obs history |
+| Control | 8 | min-jerk, trapezoidal profile, low-pass filter, MIT-mode impedance control, rate limiter, angle wrapping, PID with anti-windup, gravity compensation |
+| Imitation learning | 7 | normalisation, action chunking, DCT tokenisation, relative actions, temporal ensembling, obs history, weight EMA |
 | Diffusion policy | 4 | cosine schedule, forward process, DDPM step, DDIM step |
 | Flow matching | 3 | training target, Euler sampler, midpoint sampler |
 
