@@ -14,5 +14,9 @@
   {"id": "13", "module": "t04_control", "functions": ["min_jerk"], "test": "TestEx13MinJerk", "title": "Minimum-jerk trajectory", "title_zh": "最小加加速度轨迹"},
   {"id": "14", "module": "t04_control", "functions": ["lowpass_filter"], "test": "TestEx14LowpassFilter", "title": "First-order low-pass filter", "title_zh": "一阶低通滤波"},
   {"id": "15", "module": "t04_control", "functions": ["mit_torque"], "test": "TestEx15MitTorque", "title": "MIT-mode impedance control", "title_zh": "MIT 模式阻抗控制"},
-  {"id": "16", "module": "t04_control", "functions": ["rate_limit"], "test": "TestEx16RateLimit", "title": "Command rate limiter", "title_zh": "指令限速"}
+  {"id": "16", "module": "t04_control", "functions": ["rate_limit"], "test": "TestEx16RateLimit", "title": "Command rate limiter", "title_zh": "指令限速"},
+  {"id": "17", "module": "t05_imitation", "functions": ["minmax_normalize", "minmax_unnormalize"], "test": "TestEx17MinMax", "title": "Min-max normalisation and its inverse", "title_zh": "最小最大归一化与反归一化"},
+  {"id": "18", "module": "t05_imitation", "functions": ["make_action_chunks"], "test": "TestEx18ActionChunks", "title": "Action chunking with padding", "title_zh": "动作分块与填充掩码"},
+  {"id": "19", "module": "t05_imitation", "functions": ["temporal_ensemble"], "test": "TestEx19TemporalEnsemble", "title": "Temporal ensembling (ACT)", "title_zh": "时间集成（ACT）"},
+  {"id": "20", "module": "t05_imitation", "functions": ["stack_obs_history"], "test": "TestEx20ObsHistory", "title": "Observation history window", "title_zh": "观测历史窗口"}
 ]
