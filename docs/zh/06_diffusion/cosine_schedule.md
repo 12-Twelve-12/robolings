@@ -1,4 +1,4 @@
-<!-- en: f8aef3814903 -->
+<!-- en: 3b103ac92ef1 -->
 # cosine_schedule：余弦噪声调度
 
 文件：`exercises/06_diffusion/cosine_schedule.py`

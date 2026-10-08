@@ -115,7 +115,7 @@ def english_statement(entry):
     parts = [ast.get_docstring(tree) or ""]
     for name in entry["functions"]:
         node = functions[name]
-        signature = f"{name}({', '.join(a.arg for a in node.args.args)})"
+        signature = f"{name}({ast.unparse(node.args)})"
         parts.append(signature + "\n\n" + (ast.get_docstring(node) or ""))
     return "\n\n".join(parts)
 
