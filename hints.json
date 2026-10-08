@@ -111,6 +111,10 @@
     "en": "The angle that matters is the absolute one, the running sum of q up to that link, not q[i] itself. np.cumsum gives you all of them at once.\nJoint k carries every link from k onwards, so the sum runs from k to the end, not over link k alone.",
     "zh": "起作用的是绝对角度，也就是 q 累加到该连杆为止的和，不是 q[i] 本身。np.cumsum 一次就能全算出来。\n关节 k 扛着从 k 开始往后的所有连杆，所以求和是从 k 到末尾，不是只算连杆 k。"
   },
+  "admittance_step": {
+    "en": "Solve the equation for a, then two lines of integration. The order matters: update v first,\nthen x with the v you just computed.",
+    "zh": "先把方程解出 a，再写两行积分。顺序要紧：先更新 v，再用刚算出来的 v 更新 x。"
+  },
   "minmax": {
     "en": "Compute the span once and build a safe divisor with np.where before dividing, not\nafter: dividing first still evaluates the division and warns. The same guard,\nwith lo instead of 0, gives you the inverse.",
     "zh": "先算出 span，再用 np.where 造一个安全的除数，然后才做除法；先除再补会真的算一次\n除法并告警。反变换用同一个保护，只是把 0 换成 lo。"

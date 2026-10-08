@@ -372,3 +372,57 @@ class TestGravityTorque:
         com = np.array([0.15, 0.1, 0.1])
         out = m.gravity_torque(q, lengths, masses, com)
         assert np.isclose(out[-1], 9.81 * masses[-1] * com[-1] * np.cos(q.sum()))
+
+
+class TestAdmittanceStep:
+    def test_known_value(self):
+        # a = (f - D v - K (x - x_ref)) / M = (2 - 0.5*1 - 10*(0.2 - 0)) / 2 = -0.25
+        x_new, v_new = m.admittance_step(0.2, 1.0, 0.0, 2.0, 2.0, 0.5, 10.0, 0.1)
+        assert np.isclose(v_new, 1.0 - 0.025)
+        assert np.isclose(x_new, 0.2 + 0.975 * 0.1)
+
+    def test_at_rest_at_the_reference_nothing_moves(self):
+        x_new, v_new = m.admittance_step(0.3, 0.0, 0.3, 0.0, 1.0, 1.0, 50.0, 0.01)
+        assert np.isclose(x_new, 0.3)
+        assert np.isclose(v_new, 0.0)
+
+    def test_x_new_uses_the_new_velocity(self):
+        # from rest, the explicit step would not move x at all on the first step
+        x_new, v_new = m.admittance_step(0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.1)
+        assert np.isclose(v_new, 0.1)
+        assert np.isclose(x_new, 0.01)
+
+    def test_constant_force_settles_at_f_over_k(self):
+        x, v = 0.0, 0.0
+        for _ in range(5000):
+            x, v = m.admittance_step(x, v, 0.5, 4.0, 1.0, 5.0, 20.0, 0.002)
+        assert np.isclose(x, 0.5 + 4.0 / 20.0, atol=1e-6)
+        assert abs(v) < 1e-6
+
+    def test_damping_removes_energy(self):
+        x, v = 0.0, 2.0
+        speeds = []
+        for _ in range(100):
+            x, v = m.admittance_step(x, v, 0.0, 0.0, 1.0, 3.0, 0.0, 0.01)
+            speeds.append(abs(v))
+        assert all(b < a for a, b in zip(speeds[:-1], speeds[1:], strict=True))
+
+    def test_the_spring_pulls_towards_the_reference_not_zero(self):
+        x_new, _ = m.admittance_step(1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 100.0, 0.01)
+        assert np.isclose(x_new, 1.0)
+        _, v_new = m.admittance_step(0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 100.0, 0.01)
+        assert v_new > 0.0
+
+    def test_stiff_spring_stays_bounded(self):
+        x, v = 0.1, 0.0
+        for _ in range(2000):
+            x, v = m.admittance_step(x, v, 0.0, 0.0, 1.0, 2.0, 2000.0, 0.01)
+            assert abs(x) < 0.2
+
+    def test_per_axis_arrays(self):
+        x = np.array([0.0, 0.0, 0.0])
+        f = np.array([1.0, -2.0, 0.0])
+        x_new, v_new = m.admittance_step(x, x, x, f, np.array([1.0, 2.0, 1.0]), 0.0, 0.0, 0.1)
+        assert x_new.shape == (3,)
+        assert np.allclose(v_new, [0.1, -0.1, 0.0])
+        assert np.allclose(x_new, [0.01, -0.01, 0.0])

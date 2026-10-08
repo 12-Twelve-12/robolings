@@ -27,6 +27,7 @@
   {"name": "angle_diff", "track": "04_control", "functions": ["wrap_to_pi", "angle_diff"], "test": "TestAngleDiff", "title": "Angle wrapping and shortest difference", "title_zh": "角度回绕与最短角度差"},
   {"name": "pid_step", "track": "04_control", "functions": ["pid_step"], "test": "TestPidStep", "title": "PID step with anti-windup", "title_zh": "带抗积分饱和的 PID"},
   {"name": "gravity_torque", "track": "04_control", "functions": ["gravity_torque"], "test": "TestGravityTorque", "title": "Gravity compensation for a planar arm", "title_zh": "平面机械臂重力补偿"},
+  {"name": "admittance_step", "track": "04_control", "functions": ["admittance_step"], "test": "TestAdmittanceStep", "title": "Admittance control", "title_zh": "导纳控制"},
   {"name": "minmax", "track": "05_imitation", "functions": ["minmax_normalize", "minmax_unnormalize"], "test": "TestMinMax", "title": "Min-max normalisation and its inverse", "title_zh": "最小最大归一化与反归一化"},
   {"name": "action_chunks", "track": "05_imitation", "functions": ["make_action_chunks"], "test": "TestActionChunks", "title": "Action chunking with padding", "title_zh": "动作分块与填充掩码"},
   {"name": "dct_tokens", "track": "05_imitation", "functions": ["dct_matrix", "tokenize", "detokenize"], "test": "TestDctTokens", "title": "DCT action tokenisation", "title_zh": "DCT 动作分词"},
