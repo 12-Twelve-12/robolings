@@ -2,7 +2,7 @@
 
 Exercises for robot learning, in the style of [rustlings](https://github.com/rust-lang/rustlings).
 
-43 small functions to implement, starting at Rodrigues' formula and ending at the sampler of a flow-matching policy. NumPy only, no GPU, no simulator. The tests run in under a second.
+49 small functions to implement, from Rodrigues' formula to the sampler of a flow-matching policy and the perception that feeds it. NumPy only, no GPU, no simulator. The tests run in under a second.
 
 [中文说明](README.zh-CN.md) (the problem statements are available in Chinese too)
 
@@ -67,6 +67,7 @@ Use **Sync fork** on GitHub, or merge `upstream/main`. New exercises arrive as n
 | Imitation learning | 7 | normalisation, action chunking, DCT tokenisation, relative actions, temporal ensembling, obs history, weight EMA |
 | Diffusion policy | 5 | cosine schedule, forward process, DDPM step, DDIM step, classifier-free guidance |
 | Flow matching | 3 | training target, Euler sampler, midpoint sampler |
+| Perception | 6 | pinhole projection, depth back-projection, lens distortion and its inverse, voxel downsampling, plane fit, one ICP step |
 
 ## Roadmap
 
@@ -76,7 +77,9 @@ The tracks are not meant to stay the size they are now. The gaps, roughly in the
 - **Control** (8) has nothing on admittance control, or on reacting to a contact force that was measured rather than commanded.
 - **Imitation learning** (7) stops at the data pipeline. Nothing in it evaluates a trained policy.
 
-Two directions have no track at all yet: perception (camera projection, depth back-projection, point-cloud registration) and state estimation (complementary filter, IMU attitude, one EKF step). Neither is avoidable in a real stack. If you want to start one, open an issue first — the shape of a track matters more than any single exercise in it.
+- **Perception** (6) stops at one ICP step. Nothing in it is learned, and nothing handles more than one camera.
+
+One direction has no track at all yet: state estimation (complementary filter, IMU attitude, one EKF step). It is not avoidable in a real stack. If you want to start it, open an issue first — the shape of a track matters more than any single exercise in it.
 
 Issues labelled [`new exercise`](https://github.com/12-Twelve-12/robolings/labels/new%20exercise) are ideas nobody has started.
 

@@ -170,5 +170,29 @@
   "midpoint_sample": {
     "en": "The second call takes both the midpoint state and the midpoint time. Passing the\nold state, or the old time, gives you something that is no better than Euler.",
     "zh": "第二次调用要同时用中点处的状态和中点处的时间。只要有一个用了旧值，\n结果就不会比欧拉法更好。"
+  },
+  "project_points": {
+    "en": "T_world_cam is the camera pose, so the point has to go through its inverse: p_cam = R.T @ (p - t).\nDivide by z only for the points with z > 0; the rest get nan and valid = False.",
+    "zh": "T_world_cam 是相机位姿，点要经过它的逆：p_cam = R.T @ (p - t)。\n只对 z > 0 的点做除法，其余的像素填 nan、valid 置 False。"
+  },
+  "backproject_depth": {
+    "en": "np.mgrid[0:h, 0:w] gives you (v, u) in that order: the first index is the row.\nMultiply by z, do not divide. Zero and nan depths are invalid, and (depth > 0) with nan\ninside needs np.errstate or a np.isfinite first.",
+    "zh": "np.mgrid[0:h, 0:w] 给出的是 (v, u)，第一个下标是行。\n是乘以 z 不是除以 z。深度 0 和 nan 都无效，对含 nan 的数组做 depth > 0 之前先 np.isfinite。"
+  },
+  "distortion": {
+    "en": "r2 is x**2 + y**2, and the radial factor uses r2 and r2**2, never r. In undistort_points\nthe loop updates both coordinates from the same (x, y) of the previous round.",
+    "zh": "r2 是 x**2 + y**2，径向因子用 r2 和 r2**2，不会出现 r。undistort_points 的循环里，\n两个坐标都要用上一轮的同一组 (x, y) 来算。"
+  },
+  "voxel_downsample": {
+    "en": "np.floor, then np.lexsort on the three index columns (last key first). After sorting,\nequal consecutive rows form a group; np.add.reduceat sums each group in one call.",
+    "zh": "先 np.floor，再对三列体素索引做 np.lexsort（最后一个键排最前）。排好序后相同的索引\n连在一起，np.add.reduceat 一次就能对每组求和。"
+  },
+  "fit_plane": {
+    "en": "Subtract the centroid before the SVD. np.linalg.svd returns vt, and the normal is\nvt[-1]. d = -dot(n, centroid); if that is negative, flip both n and d.",
+    "zh": "做 SVD 之前先减去质心。np.linalg.svd 返回的 vt 里，法向是 vt[-1]。\nd = -dot(n, 质心)；若 d 为负，把 n 和 d 一起取反。"
+  },
+  "icp_step": {
+    "en": "Build the (N, M) matrix of squared distances with broadcasting and argmin along axis 1.\nThe Kabsch part is the same as in track 01. The new transform is dT @ T, not T @ dT.",
+    "zh": "用广播算出 (N, M) 的平方距离矩阵，沿 axis=1 取 argmin。Kabsch 那部分和第 01 专题一样。\n新的变换是 dT @ T，不是 T @ dT。"
   }
 }

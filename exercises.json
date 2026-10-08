@@ -41,5 +41,11 @@
   {"name": "cfg_noise", "track": "06_diffusion", "functions": ["cfg_noise"], "test": "TestCfgNoise", "title": "Classifier-free guidance", "title_zh": "无分类器引导"},
   {"name": "flow_matching_target", "track": "07_flow_matching", "functions": ["flow_matching_target"], "test": "TestFlowMatchingTarget", "title": "Flow matching training target", "title_zh": "流匹配训练目标"},
   {"name": "euler_sample", "track": "07_flow_matching", "functions": ["euler_sample"], "test": "TestEulerSample", "title": "Euler sampler", "title_zh": "欧拉采样"},
-  {"name": "midpoint_sample", "track": "07_flow_matching", "functions": ["midpoint_sample"], "test": "TestMidpointSample", "title": "Midpoint sampler", "title_zh": "中点法采样"}
+  {"name": "midpoint_sample", "track": "07_flow_matching", "functions": ["midpoint_sample"], "test": "TestMidpointSample", "title": "Midpoint sampler", "title_zh": "中点法采样"},
+  {"name": "project_points", "track": "08_perception", "functions": ["project_points"], "test": "TestProjectPoints", "title": "Pinhole projection", "title_zh": "针孔投影"},
+  {"name": "backproject_depth", "track": "08_perception", "functions": ["backproject_depth"], "test": "TestBackprojectDepth", "title": "Depth image to point cloud", "title_zh": "深度图反投影成点云"},
+  {"name": "distortion", "track": "08_perception", "functions": ["distort_points", "undistort_points"], "test": "TestDistortion", "title": "Lens distortion and its inverse", "title_zh": "镜头畸变与去畸变"},
+  {"name": "voxel_downsample", "track": "08_perception", "functions": ["voxel_downsample"], "test": "TestVoxelDownsample", "title": "Voxel grid downsampling", "title_zh": "体素下采样"},
+  {"name": "fit_plane", "track": "08_perception", "functions": ["fit_plane"], "test": "TestFitPlane", "title": "Least-squares plane fit", "title_zh": "最小二乘平面拟合"},
+  {"name": "icp_step", "track": "08_perception", "functions": ["icp_step"], "test": "TestIcpStep", "title": "One ICP iteration", "title_zh": "ICP 单步迭代"}
 ]
