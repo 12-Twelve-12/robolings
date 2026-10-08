@@ -204,6 +204,15 @@ def test_badge_shows_the_progress(tmp_path):
     assert "robolings" in text
 
 
+def test_badge_can_show_the_count_instead(tmp_path):
+    work = copy_with_solved_exercises(tmp_path)
+    (work / "exercises" / "01_rotations" / "slerp.py").unlink()
+    cli(work, "--badge", "badge.svg", "--badge-count")
+    text = (work / "badge.svg").read_text(encoding="utf-8")
+    assert f">{TOTAL} exercises<" in text
+    assert f"{TOTAL - 1}/{TOTAL}" not in text
+
+
 def test_badge_colours():
     sys.path.insert(0, str(ROOT))
     import robolings

@@ -4,7 +4,8 @@ name: Progress
 # so an unfinished exercise does not show up as a red cross.
 #
 # On the default branch it also draws a badge and commits it to a branch
-# called "progress". The README shows that badge.
+# called "progress". The README shows that badge. Upstream, where every
+# exercise is a stub, the badge shows the number of exercises instead.
 
 on:
   push:
@@ -28,7 +29,11 @@ jobs:
       - name: Grade the exercises
         run: |
           python robolings.py --markdown >> "$GITHUB_STEP_SUMMARY"
-          python robolings.py --badge "$RUNNER_TEMP/progress.svg"
+          if [ "$GITHUB_REPOSITORY" = "12-Twelve-12/robolings" ]; then
+            python robolings.py --badge "$RUNNER_TEMP/progress.svg" --badge-count
+          else
+            python robolings.py --badge "$RUNNER_TEMP/progress.svg"
+          fi
       - name: Publish the badge
         if: github.ref_name == github.event.repository.default_branch || github.event_name == 'workflow_dispatch'
         run: |

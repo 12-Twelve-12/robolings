@@ -52,7 +52,7 @@ Stuck? `hint` gives you a nudge, and the answers are in `solutions/`. `python ro
 
 ![progress](../../raw/progress/progress.svg)
 
-Each push to your fork runs the tests, puts a progress table in the summary of the workflow run, and updates this badge. The badge belongs to the repository you are looking at. Here it says 0, in your fork it shows your own count.
+Each push to your fork runs the tests, puts a progress table in the summary of the workflow run, and updates this badge. The badge belongs to the repository you are looking at: here it shows how many exercises there are, in your fork it shows your own count.
 
 Forks have Actions disabled by default, so enable them once in the Actions tab. The badge appears after the first run.
 
