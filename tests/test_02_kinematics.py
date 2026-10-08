@@ -5,7 +5,7 @@ from helpers import euler_matrix, planar_finger, spatial_chain, transform
 from loader import load_track
 
 m = load_track("02_kinematics")
-RNG = np.random.default_rng(2)
+RNG = np.random.default_rng(2)  # rebound before every test, see conftest.py
 
 
 class TestTransformInverse:

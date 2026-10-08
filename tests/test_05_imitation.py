@@ -3,7 +3,7 @@ import numpy as np
 from loader import load_track
 
 m = load_track("05_imitation")
-RNG = np.random.default_rng(5)
+RNG = np.random.default_rng(5)  # rebound before every test, see conftest.py
 
 
 class TestMinMax:

@@ -5,7 +5,7 @@ import numpy as np
 from loader import load_track
 
 m = load_track("06_diffusion")
-RNG = np.random.default_rng(6)
+RNG = np.random.default_rng(6)  # rebound before every test, see conftest.py
 
 
 def scalar_alpha_bar(u, s):

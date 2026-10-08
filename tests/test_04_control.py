@@ -3,7 +3,7 @@ import numpy as np
 from loader import load_track
 
 m = load_track("04_control")
-RNG = np.random.default_rng(4)
+RNG = np.random.default_rng(4)  # rebound before every test, see conftest.py
 
 
 class TestMinJerk:
