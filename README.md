@@ -6,9 +6,13 @@ Exercises for robot learning, in the style of [rustlings](https://github.com/rus
 
 [中文说明](README.zh-CN.md) (the problem statements are available in Chinese too)
 
+![A watch session: a wrong slerp fails three tests, the hint names the fix, the corrected one passes](docs/demo.svg)
+
 ## Usage
 
-Fork the repo and clone your fork, then:
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/12-Twelve-12/robolings?quickstart=1)
+
+To try it without installing anything, open a Codespace on this repo: it comes with Python, NumPy and the editor set up, and `python robolings.py` runs in the terminal that appears. To keep your answers, fork the repo and clone your fork, then:
 
 ```bash
 pip install -r requirements.txt
@@ -23,7 +27,7 @@ python robolings.py list
 The stubs are in `exercises/`, one file per exercise. Replace the `raise NotImplementedError` and run the exercise again. Python 3.10+.
 
 ```text
-robolings  [######........................]  6/43
+robolings  [###...........................]  6/55
 
   01_rotations
    [x]  1  rodrigues              Rodrigues' rotation formula
@@ -69,6 +73,19 @@ Use **Sync fork** on GitHub, or merge `upstream/main`. New exercises arrive as n
 | Flow matching | 3 | training target, Euler sampler, midpoint sampler |
 | Perception | 6 | pinhole projection, depth back-projection, lens distortion and its inverse, voxel downsampling, plane fit, one ICP step |
 | State estimation | 5 | complementary filter, gyro attitude integration, EKF prediction, EKF update in Joseph form, innovation gating |
+
+### Where the exercises come from
+
+Each track is the piece of a paper or a textbook that you would otherwise read past. If you are working through one of these, the matching exercises are the ones to do first.
+
+| Track | Reads well with |
+|---|---|
+| Rotations, kinematics | Lynch and Park, [Modern Robotics](https://modernrobotics.org) (free), chapters 3, 4, 5 and 6 |
+| Dexterous hands | Murray, Li and Sastry, [A Mathematical Introduction to Robotic Manipulation](https://www.cds.caltech.edu/~murray/mlswiki/) (free), chapter 5 on grasping |
+| Imitation learning | [ACT](https://arxiv.org/abs/2304.13705) for action chunking and temporal ensembling, [FAST](https://arxiv.org/abs/2501.09747) for DCT action tokens |
+| Diffusion policy | [Diffusion Policy](https://arxiv.org/abs/2303.04137), with [DDPM](https://arxiv.org/abs/2006.11239), [DDIM](https://arxiv.org/abs/2010.02502), the [cosine schedule](https://arxiv.org/abs/2102.09672) and [classifier-free guidance](https://arxiv.org/abs/2207.12598) it is built from |
+| Flow matching | [Flow Matching for Generative Modeling](https://arxiv.org/abs/2210.02747), and [π0](https://arxiv.org/abs/2410.24164), whose action head is the sampler in track 07 |
+| Perception, state estimation | Any computer vision or estimation textbook covers these. The exercises pin the conventions (OpenCV camera axes, Joseph form) that the textbooks leave to the reader |
 
 ## Roadmap
 
