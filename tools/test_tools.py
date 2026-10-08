@@ -16,6 +16,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 
 import make_exercises  # noqa: E402
+import mutants  # noqa: E402
 
 TOTAL = len(json.loads((ROOT / "exercises.json").read_text(encoding="utf-8")))
 
@@ -284,3 +285,45 @@ def test_strip_replaces_the_marked_block():
 def test_strip_rejects_unbalanced_markers(text):
     with pytest.raises(ValueError):
         make_exercises.strip_solutions(text, "f.py")
+
+
+def test_failure_kinds_tells_assertions_from_crashes():
+    output = "\n".join(
+        [
+            "F.F.F                                                                    [100%]",
+            "/home/me/robolings/tests/test_01_rotations.py:30: assert np.allclose(R, expected)",
+            "D:\\robolings\\tests\\test_01_rotations.py:41: AssertionError",
+            "/home/me/robolings/tests/test_01_rotations.py:52: IndexError: index 3 is out of bounds",
+            "3 failed, 2 passed in 0.12s",
+        ]
+    )
+    assert mutants.failure_kinds(output) == ["assertion", "assertion", "IndexError"]
+
+
+def test_failure_kinds_of_a_mutant_that_never_runs():
+    output = "\n".join(
+        [
+            "FF                                                                       [100%]",
+            "/home/me/robolings/tests/test_02_kinematics.py:15: NameError: name 'np' is not defined",
+            "/home/me/robolings/tests/test_02_kinematics.py:22: RuntimeError: x.py could not be loaded",
+            "2 failed in 0.05s",
+        ]
+    )
+    assert mutants.failure_kinds(output) == ["NameError", "RuntimeError"]
+
+
+def test_a_mutant_that_crashes_is_not_a_kill(tmp_path):
+    entry = next(
+        e
+        for e in json.loads((ROOT / "exercises.json").read_text(encoding="utf-8"))
+        if e["name"] == "rodrigues"
+    )
+    crashes = "def rodrigues(axis, angle):\n    return undefined_name\n"
+    problem, kinds = mutants.run_mutant(0, "rodrigues", "rodrigues", crashes, entry, tmp_path)
+    assert problem is None
+    assert kinds and "assertion" not in kinds
+
+    wrong = "def rodrigues(axis, angle):\n    return np.eye(3)\n"
+    problem, kinds = mutants.run_mutant(1, "rodrigues", "rodrigues", wrong, entry, tmp_path)
+    assert problem is None
+    assert "assertion" in kinds
