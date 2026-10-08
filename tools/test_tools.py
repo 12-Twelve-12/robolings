@@ -119,6 +119,11 @@ def test_show_prints_the_english_statement(tmp_path):
     assert "exercises/06_diffusion/ddim_step.py" in out
 
 
+def test_show_keeps_the_default_values(tmp_path):
+    out = cli(copy_with_solved_exercises(tmp_path), "show", "cosine_schedule")
+    assert "cosine_schedule(num_steps, s=0.008, max_beta=0.999)" in out
+
+
 def test_show_prints_the_chinese_statement(tmp_path):
     out = cli(copy_with_solved_exercises(tmp_path), "show", "ddim_step", "--zh")
     assert "DDIM 单步" in out

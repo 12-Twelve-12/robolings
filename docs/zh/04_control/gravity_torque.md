@@ -1,4 +1,4 @@
-<!-- en: 506682d33590 -->
+<!-- en: b20d112809f2 -->
 # gravity_torque：平面机械臂重力补偿
 
 文件：`exercises/04_control/gravity_torque.py`
