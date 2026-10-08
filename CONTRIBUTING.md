@@ -38,17 +38,10 @@ Issues labelled `new exercise` are ideas nobody is working on yet. Leave a comme
 
 ```bash
 pip install -r requirements-dev.txt
-
-ruff check . && ruff format --check .
-python tools/make_exercises.py --check
-python robolings.py --target solutions --expect all-pass
-python robolings.py --target exercises --expect all-fail
-python tools/mutants.py
-python tools/check_docs.py
-python -m pytest tools
+python tools/check_all.py
 ```
 
-CI runs the same commands on Linux, macOS and Windows.
+That runs, in order: ruff, the stub generator in check mode, the solutions (all must pass), the stubs (all must fail), the wrong answers, the docs check, the link check and the tests of the tooling. It stops at the first failure and tells you how to resume from there. CI runs the same commands on Linux, macOS and Windows.
 
 If you change the docstring of an existing exercise, CI will tell you that its Chinese statement is out of date. Update it and run `python tools/check_docs.py --stamp`, or delete the file and say so in the PR.
 
