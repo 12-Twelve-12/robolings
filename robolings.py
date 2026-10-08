@@ -209,6 +209,23 @@ def find(registry, key):
     raise SystemExit(f"no exercise named {key!r}; see 'python robolings.py list'")
 
 
+class Recorder:
+    """What each test of one exercise did, for the summary after the run."""
+
+    def __init__(self):
+        self.passed = 0
+        self.failed = []  # (test name, "ExceptionType: message", path, line)
+
+    def pytest_runtest_logreport(self, report):
+        if report.when == "call" and report.passed:
+            self.passed += 1
+        elif report.failed:
+            crash = getattr(report.longrepr, "reprcrash", None)
+            message = crash.message if crash is not None else str(report.longrepr)
+            where = (crash.path, crash.lineno) if crash is not None else ("", 0)
+            self.failed.append((report.nodeid.split("::")[-1], message.split("\n")[0], *where))
+
+
 def run_one(registry, key, target):
     import pytest
 
@@ -216,7 +233,38 @@ def run_one(registry, key, target):
     os.environ["ROBOLINGS_TARGET"] = target
     print(f"{entry['name']}  ({file_of(entry, target)})")
     node = f"{ROOT / 'tests' / ('test_' + entry['track'] + '.py')}::{entry['test']}"
-    return int(pytest.main(["-q", "--tb=short", "-p", "no:cacheprovider", node]))
+    recorder = Recorder()
+    sink = io.StringIO()
+    with contextlib.redirect_stdout(sink):
+        code = int(pytest.main(["-q", "--tb=short", "-p", "no:cacheprovider", node], plugins=[recorder]))
+    if code not in (0, 1):
+        print(sink.getvalue())
+        return code
+
+    total = recorder.passed + len(recorder.failed)
+    messages = [f[1] for f in recorder.failed]
+    if not recorder.failed:
+        print(f"all {total} tests pass")
+        return 0
+    if all(m.startswith("NotImplementedError") for m in messages):
+        print("not started: the function still raises NotImplementedError")
+        print(f"  edit   {file_of(entry, target)}")
+        print(f"  read   python robolings.py show {entry['name']}")
+        print(f"  stuck  python robolings.py hint {entry['name']}")
+        return 1
+    kinds = {m.split(":", 1)[0] for m in messages}
+    is_assertion = any(m.startswith(("assert", "AssertionError")) for m in messages)
+    if not is_assertion and len(kinds) == 1 and len(set(messages)) == 1:
+        # the same crash in every test: say it once, with where it happened
+        _, message, path, line = recorder.failed[0]
+        with contextlib.suppress(ValueError):
+            path = pathlib.Path(path).relative_to(ROOT).as_posix()
+        print(f"every test stopped with the same error at {path}:{line}")
+        print(f"  {message}")
+        return 1
+    print(sink.getvalue(), end="")
+    print(f"{recorder.passed} of {total} tests pass")
+    return 1
 
 
 def show(registry, key, target, zh):
