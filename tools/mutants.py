@@ -2412,23 +2412,6 @@ def ekf_predict(x, P, f, F, Q):
     (
         "ekf_update",
         "ekf_update",
-        "the short covariance form (I - K H) P",
-        """
-def ekf_update(x, P, z, h, H, R):
-    x = np.asarray(x, dtype=np.float64)
-    P = np.asarray(P, dtype=np.float64)
-    z = np.asarray(z, dtype=np.float64)
-    H = np.asarray(H, dtype=np.float64)
-    R = np.asarray(R, dtype=np.float64)
-    y = z - np.asarray(h(x), dtype=np.float64)
-    S = H @ P @ H.T + R
-    K = np.linalg.solve(S, H @ P).T
-    return x + K @ y, (np.eye(len(x)) - K @ H) @ P
-""",
-    ),
-    (
-        "ekf_update",
-        "ekf_update",
         "the gain divides by R instead of S",
         """
 def ekf_update(x, P, z, h, H, R):
