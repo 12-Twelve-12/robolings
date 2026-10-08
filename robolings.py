@@ -11,6 +11,7 @@
     python robolings.py --zh          Chinese titles, statements and hints
     python robolings.py --markdown    progress as Markdown, for CI summaries
     python robolings.py --badge FILE  also write a progress badge
+    python robolings.py --badge FILE --badge-count   a badge with the number of exercises
 
 Set ROBOLINGS_LANG=zh to make --zh the default.
 
@@ -167,15 +168,21 @@ def print_markdown(registry, status, zh):
         print(f"| {mark} | `{entry['name']}` | {title_of(entry, zh)} | `{file_of(entry, 'exercises')}` |")
 
 
-def badge_svg(done, total):
-    """A small "robolings | 12/31" badge, drawn here so that no outside service is needed."""
-    label, value = "robolings", f"{done}/{total}"
-    if done == total:
-        color = "#4c1"
+def badge_svg(done, total, count_only=False):
+    """A small "robolings | 12/31" badge, drawn here so that no outside service is needed.
+
+    With ``count_only`` it says "robolings | 31 exercises" instead: the
+    upstream repository has no progress to show, only stubs.
+    """
+    label = "robolings"
+    if count_only:
+        value, color = f"{total} exercises", "#007ec6"
+    elif done == total:
+        value, color = f"{done}/{total}", "#4c1"
     elif done == 0:
-        color = "#9f9f9f"
+        value, color = f"{done}/{total}", "#9f9f9f"
     else:
-        color = ("#fe7d37", "#dfb317", "#97ca00")[min(3 * done // total, 2)]
+        value, color = f"{done}/{total}", ("#fe7d37", "#dfb317", "#97ca00")[min(3 * done // total, 2)]
     left = 10 + round(6.5 * len(label))
     right = 10 + round(6.5 * len(value))
     width = left + right
@@ -343,6 +350,11 @@ def main():
     parser.add_argument("--markdown", action="store_true")
     parser.add_argument("--brief", action="store_true", help="progress without the per-exercise list")
     parser.add_argument("--badge", metavar="FILE", help="also write a progress badge (SVG)")
+    parser.add_argument(
+        "--badge-count",
+        action="store_true",
+        help="the badge shows the number of exercises, not your progress",
+    )
     parser.add_argument("--force", action="store_true", help="reset without asking")
     parser.add_argument("--expect", choices=["all-pass", "all-fail"])
     args = parser.parse_args()
@@ -381,7 +393,8 @@ def main():
 
     if args.badge:
         done = sum(1 for s in status.values() if s == "done")
-        pathlib.Path(args.badge).write_text(badge_svg(done, len(registry)), encoding="utf-8", newline="\n")
+        svg = badge_svg(done, len(registry), count_only=args.badge_count)
+        pathlib.Path(args.badge).write_text(svg, encoding="utf-8", newline="\n")
 
     if args.expect:
         wanted = "done" if args.expect == "all-pass" else "todo"
