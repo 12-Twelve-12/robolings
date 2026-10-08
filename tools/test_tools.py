@@ -98,6 +98,47 @@ def test_run_accepts_a_name_or_a_position(tmp_path):
         )
         assert result.returncode == 0, result.stdout
         assert result.stdout.startswith("slerp ")
+        assert "all 7 tests pass" in result.stdout
+
+
+def test_run_on_an_untouched_stub_says_not_started(tmp_path):
+    work = copy_with_solved_exercises(tmp_path)
+    cli_raw(work, "reset", "slerp", "--force")
+    result = cli_raw(work, "run", "slerp")
+    assert result.returncode == 1
+    assert "not started" in result.stdout
+    assert "hint slerp" in result.stdout
+    assert "FAILED" not in result.stdout
+    assert len(result.stdout.splitlines()) <= 6
+
+
+def test_run_reports_a_crash_once(tmp_path):
+    work = copy_with_solved_exercises(tmp_path)
+    path = work / "exercises" / "01_rotations" / "slerp.py"
+    path.write_text(
+        path.read_text(encoding="utf-8").replace("def slerp(", "def slerp(\n    undefined_name\n"),
+        encoding="utf-8",
+    )
+    result = cli_raw(work, "run", "slerp")
+    assert result.returncode == 1
+    assert "every test stopped with the same error" in result.stdout
+    assert result.stdout.count("SyntaxError") == 1 or result.stdout.count("could not be loaded") == 1
+    assert len(result.stdout.splitlines()) <= 4
+
+
+def test_run_on_a_wrong_answer_keeps_the_pytest_output(tmp_path):
+    work = copy_with_solved_exercises(tmp_path)
+    path = work / "exercises" / "01_rotations" / "slerp.py"
+    text = path.read_text(encoding="utf-8")
+    # drop the short-way flip: three tests fail on assertions, four pass
+    text = text.replace("    if dot < 0.0:\n        q1 = -q1\n        dot = -dot\n", "")
+    assert "q1 = -q1" not in text
+    path.write_text(text, encoding="utf-8")
+    result = cli_raw(work, "run", "slerp")
+    assert result.returncode == 1
+    assert "FAILED" in result.stdout
+    assert "test_takes_the_short_way" in result.stdout
+    assert "of 7 tests pass" in result.stdout
 
 
 def cli(work, *args, env=None):
