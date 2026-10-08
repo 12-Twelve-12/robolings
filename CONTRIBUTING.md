@@ -28,7 +28,7 @@ Issues labelled `new exercise` are ideas nobody is working on yet. Leave a comme
 
 2. Add an entry to `exercises.json`. The position in the file is the order learners see. Names are permanent, positions are not.
 3. Add a test class to `tests/test_<track>.py`, named as in the entry. Don't call other exercises from a test; shared reference code goes in `tests/helpers.py`.
-4. Add at least one wrong answer to `tools/mutants.py`.
+4. Add at least one wrong answer to `tools/wrong_answers/<track>.py`. `python tools/mutants.py` runs them all.
 5. Add a hint to `hints.json`, in both languages, in the same position as in `exercises.json`. A hint points at the idea, it does not contain the answer.
 6. Regenerate the stubs with `python tools/make_exercises.py`. Don't edit `exercises/` by hand.
 7. Update the table and the exercise count in both READMEs.
