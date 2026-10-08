@@ -2,7 +2,7 @@
 
 Exercises for robot learning, in the style of [rustlings](https://github.com/rust-lang/rustlings).
 
-54 small functions to implement, from Rodrigues' formula to the sampler of a flow-matching policy, with the perception and state estimation that feed it. NumPy only, no GPU, no simulator. The tests run in under a second.
+55 small functions to implement, from Rodrigues' formula to the sampler of a flow-matching policy, with the perception and state estimation that feed it. NumPy only, no GPU, no simulator. The tests run in under a second.
 
 [中文说明](README.zh-CN.md) (the problem statements are available in Chinese too)
 
@@ -63,7 +63,7 @@ Use **Sync fork** on GitHub, or merge `upstream/main`. New exercises arrive as n
 | Rotations | 7 | Rodrigues, quaternion product, quaternion ↔ matrix, slerp, Kabsch, log and exp |
 | Kinematics | 7 | transform inverse, FK, analytic two-link IK, geometric Jacobian, damped least squares, null-space projection, manipulability |
 | Dexterous hands | 6 | mimic joints, coupled Jacobian, retargeting cost, fingertip IK with joint limits, friction cone, force closure |
-| Control | 8 | min-jerk, trapezoidal profile, low-pass filter, MIT-mode impedance control, rate limiter, angle wrapping, PID with anti-windup, gravity compensation |
+| Control | 9 | min-jerk, trapezoidal profile, low-pass filter, MIT-mode impedance control, rate limiter, angle wrapping, PID with anti-windup, gravity compensation, admittance control |
 | Imitation learning | 7 | normalisation, action chunking, DCT tokenisation, relative actions, temporal ensembling, obs history, weight EMA |
 | Diffusion policy | 5 | cosine schedule, forward process, DDPM step, DDIM step, classifier-free guidance |
 | Flow matching | 3 | training target, Euler sampler, midpoint sampler |
@@ -75,7 +75,7 @@ Use **Sync fork** on GitHub, or merge `upstream/main`. New exercises arrive as n
 The tracks are not meant to stay the size they are now. The gaps, roughly in the order they matter:
 
 - **Flow matching** (3) is the thinnest track, and the hardest to grow without repeating the diffusion one.
-- **Control** (8) has nothing on admittance control, or on reacting to a contact force that was measured rather than commanded.
+- **Control** (9) treats every joint on its own. Nothing couples joints through a model, and nothing plans around a joint limit.
 - **Imitation learning** (7) stops at the data pipeline. Nothing in it evaluates a trained policy.
 
 - **Perception** (6) stops at one ICP step. Nothing in it is learned, and nothing handles more than one camera.

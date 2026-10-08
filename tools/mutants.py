@@ -2480,6 +2480,62 @@ def ekf_update(x, P, z, h, H, R):
 """,
     ),
     (
+        "admittance_step",
+        "admittance_step",
+        "explicit Euler: x advances with the old velocity",
+        """
+def admittance_step(x, v, x_ref, f_ext, M, D, K, dt):
+    x, v, x_ref, f_ext = (np.asarray(a, dtype=np.float64) for a in (x, v, x_ref, f_ext))
+    M, D, K = (np.asarray(a, dtype=np.float64) for a in (M, D, K))
+    a = (f_ext - D * v - K * (x - x_ref)) / M
+    x_new = x + v * dt
+    v_new = v + a * dt
+    return x_new, v_new
+""",
+    ),
+    (
+        "admittance_step",
+        "admittance_step",
+        "the spring is anchored at zero instead of x_ref",
+        """
+def admittance_step(x, v, x_ref, f_ext, M, D, K, dt):
+    x, v, x_ref, f_ext = (np.asarray(a, dtype=np.float64) for a in (x, v, x_ref, f_ext))
+    M, D, K = (np.asarray(a, dtype=np.float64) for a in (M, D, K))
+    a = (f_ext - D * v - K * x) / M
+    v_new = v + a * dt
+    x_new = x + v_new * dt
+    return x_new, v_new
+""",
+    ),
+    (
+        "admittance_step",
+        "admittance_step",
+        "damping sign reversed",
+        """
+def admittance_step(x, v, x_ref, f_ext, M, D, K, dt):
+    x, v, x_ref, f_ext = (np.asarray(a, dtype=np.float64) for a in (x, v, x_ref, f_ext))
+    M, D, K = (np.asarray(a, dtype=np.float64) for a in (M, D, K))
+    a = (f_ext + D * v - K * (x - x_ref)) / M
+    v_new = v + a * dt
+    x_new = x + v_new * dt
+    return x_new, v_new
+""",
+    ),
+    (
+        "admittance_step",
+        "admittance_step",
+        "the mass is forgotten",
+        """
+def admittance_step(x, v, x_ref, f_ext, M, D, K, dt):
+    x, v, x_ref, f_ext = (np.asarray(a, dtype=np.float64) for a in (x, v, x_ref, f_ext))
+    D, K = (np.asarray(a, dtype=np.float64) for a in (D, K))
+    a = f_ext - D * v - K * (x - x_ref)
+    v_new = v + a * dt
+    x_new = x + v_new * dt
+    return x_new, v_new
+""",
+    ),
+    (
         "innovation_gate",
         "innovation_gate",
         "euclidean distance",
