@@ -6,9 +6,13 @@
 
 [English](README.md)
 
+![一次 watch 会话：错的 slerp 挂了三个测试，提示点出修法，改对后全过](docs/demo.svg)
+
 ## 用法
 
-先 fork，再克隆你自己的 fork：
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/12-Twelve-12/robolings?quickstart=1)
+
+什么都不想装的话，直接在这个仓库上开一个 Codespace：Python、NumPy 和编辑器都配好了，终端里直接 `python robolings.py`。想保存自己的答案，就先 fork，再克隆你自己的 fork：
 
 ```bash
 pip install -r requirements.txt
@@ -26,7 +30,7 @@ python robolings.py --zh      # 题目名显示中文
 题目在 `exercises/` 里，一题一个文件。把 `raise NotImplementedError` 换成你的实现，再跑一次就行。需要 Python 3.10 以上。
 
 ```text
-robolings  [######........................]  6/43
+robolings  [###...........................]  6/55
 
   01_rotations
    [x]  1  rodrigues              Rodrigues' rotation formula
@@ -72,6 +76,19 @@ fork 出来的仓库默认关闭 Actions，需要先到 Actions 页签手动开�
 | 流匹配 | 3 | 训练目标、欧拉采样、中点法采样 |
 | 感知 | 6 | 针孔投影、深度图反投影、镜头畸变与去畸变、体素下采样、平面拟合、ICP 单步 |
 | 状态估计 | 5 | 互补滤波、陀螺仪姿态积分、EKF 预测步、Joseph 形式的 EKF 更新步、新息门限剔野 |
+
+### 题目的出处
+
+每条线都是某篇论文或某本教材里你平时会一眼扫过去的那一小块。正在读其中哪一本，就先做对应的题。
+
+| 专题 | 配合着读 |
+|---|---|
+| 旋转、运动学 | Lynch 与 Park，[Modern Robotics](https://modernrobotics.org)（免费），第 3、4、5、6 章 |
+| 灵巧手 | Murray、Li 与 Sastry，[A Mathematical Introduction to Robotic Manipulation](https://www.cds.caltech.edu/~murray/mlswiki/)（免费），第 5 章抓取 |
+| 模仿学习 | [ACT](https://arxiv.org/abs/2304.13705) 的动作分块与时间集成，[FAST](https://arxiv.org/abs/2501.09747) 的 DCT 动作分词 |
+| 扩散策略 | [Diffusion Policy](https://arxiv.org/abs/2303.04137)，以及它所依赖的 [DDPM](https://arxiv.org/abs/2006.11239)、[DDIM](https://arxiv.org/abs/2010.02502)、[余弦调度](https://arxiv.org/abs/2102.09672) 和 [无分类器引导](https://arxiv.org/abs/2207.12598) |
+| 流匹配 | [Flow Matching for Generative Modeling](https://arxiv.org/abs/2210.02747)，以及 [π0](https://arxiv.org/abs/2410.24164)，它的动作头就是第 07 专题里的采样器 |
+| 感知、状态估计 | 任何一本计算机视觉或估计理论教材都有。题目把教材留给读者的约定（OpenCV 相机坐标轴、Joseph 形式）钉死了 |
 
 ## 路线
 

@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="672" viewBox="0 0 720 672" font-family="SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace" font-size="13">
+<style>
+@keyframes show { 0% {opacity:0} 100% {opacity:1} }
+.l { opacity:0; animation: show 0.01s linear forwards; animation-iteration-count: infinite; animation-duration: 13.0s; }
+</style>
+<rect width="720" height="672" rx="8" fill="#0d1117"/>
+<rect width="720" height="34" rx="8" fill="#161b22"/>
+<rect y="26" width="720" height="8" fill="#161b22"/>
+<circle cx="18" cy="17" r="6" fill="#ff5f56"/><circle cx="38" cy="17" r="6" fill="#ffbd2e"/><circle cx="58" cy="17" r="6" fill="#27c93f"/>
+<text x="360" y="21" text-anchor="middle" fill="#8b949e" font-size="12">robolings</text>
+<style>@keyframes k0 { 0% {opacity:0} 0.000% {opacity:0} 0.100% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="54" fill="#ffffff" xml:space="preserve" style="opacity:0; animation: k0 13.0s linear infinite">$ python robolings.py watch</text>
+<style>@keyframes k1 { 0% {opacity:0} 4.615% {opacity:0} 4.715% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="74" fill="#c9d1d9" xml:space="preserve" style="opacity:0; animation: k1 13.0s linear infinite">robolings  [##............................]  4/55</text>
+<style>@keyframes k2 { 0% {opacity:0} 4.615% {opacity:0} 4.715% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="94" fill="#c9d1d9" xml:space="preserve" style="opacity:0; animation: k2 13.0s linear infinite"></text>
+<style>@keyframes k3 { 0% {opacity:0} 4.615% {opacity:0} 4.715% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="114" fill="#c9d1d9" xml:space="preserve" style="opacity:0; animation: k3 13.0s linear infinite">Next: slerp</text>
+<style>@keyframes k4 { 0% {opacity:0} 4.615% {opacity:0} 4.715% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="134" fill="#8b949e" xml:space="preserve" style="opacity:0; animation: k4 13.0s linear infinite">  edit   exercises/01_rotations/slerp.py</text>
+<style>@keyframes k5 { 0% {opacity:0} 4.615% {opacity:0} 4.715% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="154" fill="#8b949e" xml:space="preserve" style="opacity:0; animation: k5 13.0s linear infinite">  check  python robolings.py run slerp</text>
+<style>@keyframes k6 { 0% {opacity:0} 4.615% {opacity:0} 4.715% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="174" fill="#8b949e" xml:space="preserve" style="opacity:0; animation: k6 13.0s linear infinite">  stuck  python robolings.py hint slerp</text>
+<style>@keyframes k7 { 0% {opacity:0} 4.615% {opacity:0} 4.715% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="194" fill="#c9d1d9" xml:space="preserve" style="opacity:0; animation: k7 13.0s linear infinite"></text>
+<style>@keyframes k8 { 0% {opacity:0} 4.615% {opacity:0} 4.715% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="214" fill="#8b949e" xml:space="preserve" style="opacity:0; animation: k8 13.0s linear infinite">Watching for changes. Press Ctrl-C to stop.</text>
+<style>@keyframes k9 { 0% {opacity:0} 20.000% {opacity:0} 20.100% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="234" fill="#c9d1d9" xml:space="preserve" style="opacity:0; animation: k9 13.0s linear infinite"></text>
+<style>@keyframes k10 { 0% {opacity:0} 20.000% {opacity:0} 20.100% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="254" fill="#d29922" xml:space="preserve" style="opacity:0; animation: k10 13.0s linear infinite">--- slerp changed</text>
+<style>@keyframes k11 { 0% {opacity:0} 20.000% {opacity:0} 20.100% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="274" fill="#c9d1d9" xml:space="preserve" style="opacity:0; animation: k11 13.0s linear infinite">slerp  (exercises/01_rotations/slerp.py)</text>
+<style>@keyframes k12 { 0% {opacity:0} 23.846% {opacity:0} 23.946% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="294" fill="#c9d1d9" xml:space="preserve" style="opacity:0; animation: k12 13.0s linear infinite">....FFF                                              [100%]</text>
+<style>@keyframes k13 { 0% {opacity:0} 26.154% {opacity:0} 26.254% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="314" fill="#f85149" xml:space="preserve" style="opacity:0; animation: k13 13.0s linear infinite">FAILED TestSlerp::test_takes_the_short_way</text>
+<style>@keyframes k14 { 0% {opacity:0} 26.154% {opacity:0} 26.254% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="334" fill="#f85149" xml:space="preserve" style="opacity:0; animation: k14 13.0s linear infinite">FAILED TestSlerp::test_identical_inputs</text>
+<style>@keyframes k15 { 0% {opacity:0} 26.154% {opacity:0} 26.254% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="354" fill="#f85149" xml:space="preserve" style="opacity:0; animation: k15 13.0s linear infinite">FAILED TestSlerp::test_nearly_identical_inputs</text>
+<style>@keyframes k16 { 0% {opacity:0} 26.154% {opacity:0} 26.254% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="374" fill="#f85149" xml:space="preserve" style="opacity:0; animation: k16 13.0s linear infinite">3 failed, 4 passed in 0.07s</text>
+<style>@keyframes k17 { 0% {opacity:0} 43.077% {opacity:0} 43.177% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="394" fill="#c9d1d9" xml:space="preserve" style="opacity:0; animation: k17 13.0s linear infinite"></text>
+<style>@keyframes k18 { 0% {opacity:0} 43.077% {opacity:0} 43.177% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="414" fill="#ffffff" xml:space="preserve" style="opacity:0; animation: k18 13.0s linear infinite">$ python robolings.py hint slerp</text>
+<style>@keyframes k19 { 0% {opacity:0} 46.154% {opacity:0} 46.254% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="434" fill="#58a6ff" xml:space="preserve" style="opacity:0; animation: k19 13.0s linear infinite">Two guards, and you need both: flip q1 when dot &lt; 0, and fall</text>
+<style>@keyframes k20 { 0% {opacity:0} 46.154% {opacity:0} 46.254% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="454" fill="#58a6ff" xml:space="preserve" style="opacity:0; animation: k20 13.0s linear infinite">back to a normalised lerp when dot &gt; 0.9995.</text>
+<style>@keyframes k21 { 0% {opacity:0} 66.154% {opacity:0} 66.254% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="474" fill="#c9d1d9" xml:space="preserve" style="opacity:0; animation: k21 13.0s linear infinite"></text>
+<style>@keyframes k22 { 0% {opacity:0} 66.154% {opacity:0} 66.254% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="494" fill="#d29922" xml:space="preserve" style="opacity:0; animation: k22 13.0s linear infinite">--- slerp changed</text>
+<style>@keyframes k23 { 0% {opacity:0} 66.154% {opacity:0} 66.254% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="514" fill="#c9d1d9" xml:space="preserve" style="opacity:0; animation: k23 13.0s linear infinite">slerp  (exercises/01_rotations/slerp.py)</text>
+<style>@keyframes k24 { 0% {opacity:0} 70.000% {opacity:0} 70.100% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="534" fill="#c9d1d9" xml:space="preserve" style="opacity:0; animation: k24 13.0s linear infinite">.......                                              [100%]</text>
+<style>@keyframes k25 { 0% {opacity:0} 72.308% {opacity:0} 72.408% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="554" fill="#3fb950" xml:space="preserve" style="opacity:0; animation: k25 13.0s linear infinite">7 passed in 0.02s</text>
+<style>@keyframes k26 { 0% {opacity:0} 76.154% {opacity:0} 76.254% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="574" fill="#c9d1d9" xml:space="preserve" style="opacity:0; animation: k26 13.0s linear infinite"></text>
+<style>@keyframes k27 { 0% {opacity:0} 76.154% {opacity:0} 76.254% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="594" fill="#c9d1d9" xml:space="preserve" style="opacity:0; animation: k27 13.0s linear infinite">robolings  [###...........................]  5/55</text>
+<style>@keyframes k28 { 0% {opacity:0} 76.154% {opacity:0} 76.254% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="614" fill="#c9d1d9" xml:space="preserve" style="opacity:0; animation: k28 13.0s linear infinite"></text>
+<style>@keyframes k29 { 0% {opacity:0} 76.154% {opacity:0} 76.254% {opacity:1} 100% {opacity:1} }</style>
+<text x="18" y="634" fill="#c9d1d9" xml:space="preserve" style="opacity:0; animation: k29 13.0s linear infinite">Next: kabsch</text>
+</svg>
