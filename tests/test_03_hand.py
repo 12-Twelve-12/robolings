@@ -4,7 +4,7 @@ from helpers import planar_finger
 from loader import load_track
 
 m = load_track("03_hand")
-RNG = np.random.default_rng(3)
+RNG = np.random.default_rng(3)  # rebound before every test, see conftest.py
 
 
 class TestExpandMimic:

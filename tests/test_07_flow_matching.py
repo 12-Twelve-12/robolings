@@ -5,7 +5,7 @@ import numpy as np
 from loader import load_track
 
 m = load_track("07_flow_matching")
-RNG = np.random.default_rng(7)
+RNG = np.random.default_rng(7)  # rebound before every test, see conftest.py
 
 
 class TestFlowMatchingTarget:

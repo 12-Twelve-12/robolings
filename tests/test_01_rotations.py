@@ -5,7 +5,7 @@ from helpers import axis_angle_quat, euler_matrix, is_rotation, rot_x, rot_y, ro
 from loader import load_track
 
 m = load_track("01_rotations")
-RNG = np.random.default_rng(1)
+RNG = np.random.default_rng(1)  # rebound before every test, see conftest.py
 
 
 class TestRodrigues:
