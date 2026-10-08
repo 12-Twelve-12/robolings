@@ -15,6 +15,7 @@ import pytest
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 
+import check_all  # noqa: E402
 import make_exercises  # noqa: E402
 import mutants  # noqa: E402
 
@@ -332,3 +333,16 @@ def test_a_mutant_that_crashes_is_not_a_kill(tmp_path):
     problem, kinds = mutants.run_mutant(1, "rodrigues", "rodrigues", wrong, entry, tmp_path)
     assert problem is None
     assert "assertion" in kinds
+
+
+def test_check_all_runs_what_ci_runs():
+    workflows = "".join(p.read_text(encoding="utf-8") for p in (ROOT / ".github" / "workflows").glob("*.yml"))
+    ci_lines = {line.split("run:", 1)[1].strip() for line in workflows.splitlines() if "run:" in line}
+    for _, command in check_all.CHECKS:
+        assert command in ci_lines, f"{command!r} is not a CI step"
+
+
+def test_check_all_argv():
+    assert check_all.argv_for("ruff check .") == [sys.executable, "-m", "ruff", "check", "."]
+    assert check_all.argv_for("python tools/mutants.py") == [sys.executable, "tools/mutants.py"]
+    assert check_all.argv_for("python robolings.py --target solutions --expect all-pass")[-1] == "--brief"

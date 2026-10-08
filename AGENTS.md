@@ -33,17 +33,14 @@ agents get wrong more often than people do:
   `tools/mutants.py`, a hint in `hints.json`, and the exercise counts in both
   READMEs. `python tools/check_docs.py` catches the last two.
 
-Run all of this before you claim the change is finished:
+Run this before you claim the change is finished, and paste its last line
+into the PR:
 
 ```bash
-ruff check . && ruff format --check .
-python tools/make_exercises.py --check
-python robolings.py --target solutions --expect all-pass
-python robolings.py --target exercises --expect all-fail
-python tools/mutants.py
-python tools/check_docs.py
-python -m pytest tools
+python tools/check_all.py
 ```
+
+It runs every check CI runs, in order, and stops at the first failure.
 
 ## What the tests are for
 
