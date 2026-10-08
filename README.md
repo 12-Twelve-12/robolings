@@ -2,7 +2,7 @@
 
 Exercises for robot learning, in the style of [rustlings](https://github.com/rust-lang/rustlings).
 
-49 small functions to implement, from Rodrigues' formula to the sampler of a flow-matching policy and the perception that feeds it. NumPy only, no GPU, no simulator. The tests run in under a second.
+54 small functions to implement, from Rodrigues' formula to the sampler of a flow-matching policy, with the perception and state estimation that feed it. NumPy only, no GPU, no simulator. The tests run in under a second.
 
 [中文说明](README.zh-CN.md) (the problem statements are available in Chinese too)
 
@@ -68,6 +68,7 @@ Use **Sync fork** on GitHub, or merge `upstream/main`. New exercises arrive as n
 | Diffusion policy | 5 | cosine schedule, forward process, DDPM step, DDIM step, classifier-free guidance |
 | Flow matching | 3 | training target, Euler sampler, midpoint sampler |
 | Perception | 6 | pinhole projection, depth back-projection, lens distortion and its inverse, voxel downsampling, plane fit, one ICP step |
+| State estimation | 5 | complementary filter, gyro attitude integration, EKF prediction, EKF update in Joseph form, innovation gating |
 
 ## Roadmap
 
@@ -78,8 +79,9 @@ The tracks are not meant to stay the size they are now. The gaps, roughly in the
 - **Imitation learning** (7) stops at the data pipeline. Nothing in it evaluates a trained policy.
 
 - **Perception** (6) stops at one ICP step. Nothing in it is learned, and nothing handles more than one camera.
+- **State estimation** (5) has the EKF in two halves but never runs one on a real model, and nothing on bias estimation or an error-state filter.
 
-One direction has no track at all yet: state estimation (complementary filter, IMU attitude, one EKF step). It is not avoidable in a real stack. If you want to start it, open an issue first — the shape of a track matters more than any single exercise in it.
+If you want to start a new track, open an issue first — the shape of a track matters more than any single exercise in it.
 
 Issues labelled [`new exercise`](https://github.com/12-Twelve-12/robolings/labels/new%20exercise) are ideas nobody has started.
 

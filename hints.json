@@ -194,5 +194,25 @@
   "icp_step": {
     "en": "Build the (N, M) matrix of squared distances with broadcasting and argmin along axis 1.\nThe Kabsch part is the same as in track 01. The new transform is dT @ T, not T @ dT.",
     "zh": "用广播算出 (N, M) 的平方距离矩阵，沿 axis=1 取 argmin。Kabsch 那部分和第 01 专题一样。\n新的变换是 dT @ T，不是 T @ dT。"
+  },
+  "complementary_filter": {
+    "en": "One line. The gyro term is angle + gyro * dt with the angle you were given, and alpha\nmultiplies that whole sum, not just the gyro part.",
+    "zh": "就一行。陀螺项是 angle + gyro * dt，用传进来的 angle；alpha 乘的是这整个和，\n不只是陀螺那一项。"
+  },
+  "gyro_integrate": {
+    "en": "Build dq from the half angle, like quat_exp in track 01, then q_new = quat_mul(q, dq)\nwith q on the left. Guard the tiny-rate case before dividing by the norm.",
+    "zh": "用半角构造 dq，和第 01 专题的 quat_exp 一样，然后 q_new = quat_mul(q, dq)，\nq 在左边。先处理角速度几乎为零的情形，再除以模长。"
+  },
+  "ekf_predict": {
+    "en": "Two lines. The state goes through f, the covariance through F. np.asarray makes a copy\nwhen you pass a list, but P @ ... never writes into P anyway.",
+    "zh": "两行。状态过 f，协方差过 F。注意不要原地改 P。"
+  },
+  "ekf_update": {
+    "en": "K = P @ H.T @ inv(S): with solve, that is np.linalg.solve(S, H @ P).T because S is symmetric.\nThen the Joseph form, both factors (I - K H) and the K R K.T term.",
+    "zh": "K = P @ H.T @ inv(S)：用 solve 写就是 np.linalg.solve(S, H @ P).T，因为 S 对称。\n然后是 Joseph 形式：两边都乘 (I - K H)，再加上 K R K.T。"
+  },
+  "innovation_gate": {
+    "en": "d2 = y @ np.linalg.solve(S, y). Compare with <=, and convert both outputs with bool()\nand float() so the caller does not get numpy scalars.",
+    "zh": "d2 = y @ np.linalg.solve(S, y)。比较用 <=，两个返回值分别用 bool() 和 float() 转一下，\n别把 numpy 标量交给调用方。"
   }
 }
