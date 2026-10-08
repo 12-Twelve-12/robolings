@@ -108,7 +108,7 @@ Issues labelled [`new exercise`](https://github.com/12-Twelve-12/robolings/label
 - Rotation matrices map body coordinates to world coordinates.
 - Flow matching: `t = 0` is noise, `t = 1` is data.
 - The tests for one exercise never call another exercise, so you can do them in any order.
-- The tests are also run against a list of typical wrong answers (`tools/mutants.py`), for example dividing by `w` in matrix → quaternion, or clipping joint limits only after the IK loop. If you find a wrong answer that still passes, please open an issue.
+- The tests are also run against a list of typical wrong answers (`tools/wrong_answers/`, one file per track), for example dividing by `w` in matrix → quaternion, or clipping joint limits only after the IK loop. If you find a wrong answer that still passes, please open an issue.
 
 ## Contributing
 

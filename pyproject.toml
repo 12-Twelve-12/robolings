@@ -9,7 +9,7 @@ select = ["E", "F", "W", "I", "B", "UP", "NPY"]
 # the stubs import numpy for you, nothing uses it until you write the body
 "exercises/**" = ["F401"]
 # wrong answers are kept as source strings
-"tools/mutants.py" = ["E501"]
+"tools/wrong_answers/*.py" = ["E501"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["helpers", "loader"]

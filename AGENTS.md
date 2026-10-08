@@ -30,7 +30,7 @@ agents get wrong more often than people do:
   `python tools/make_exercises.py`. A hand-edited stub is reverted by CI.
 - **A new exercise is not done when the tests pass.** It needs an entry in
   `exercises.json`, a test class, at least one wrong answer in
-  `tools/mutants.py`, a hint in `hints.json`, and the exercise counts in both
+  `tools/wrong_answers/<track>.py`, a hint in `hints.json`, and the exercise counts in both
   READMEs. `python tools/check_docs.py` catches the last two.
 
 Run this before you claim the change is finished, and paste its last line
