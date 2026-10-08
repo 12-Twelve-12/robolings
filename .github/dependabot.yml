@@ -1,12 +1,23 @@
-# Keeps the actions used by the workflows on their current major versions.
-# Nothing here updates numpy or pytest: requirements.txt states the oldest
-# versions the exercises are tested against, and that floor is deliberate.
+# Keeps the actions used by the workflows on their current major versions,
+# and the ruff pin in requirements-dev.txt on its current release. Nothing
+# here updates numpy or pytest: requirements.txt states the oldest versions
+# the exercises are tested against, and that floor is deliberate.
 version: 2
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "monthly"
+    commit-message:
+      prefix: "ci"
+    labels:
+      - "dependencies"
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    allow:
+      - dependency-name: "ruff"
     commit-message:
       prefix: "ci"
     labels:
